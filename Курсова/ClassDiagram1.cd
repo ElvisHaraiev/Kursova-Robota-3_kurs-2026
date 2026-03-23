@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Курсова.DbHelper" Collapsed="true">
+    <Position X="8.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAABAAAAA=</HashCode>
+      <FileName>DbHelper.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.Form1" Collapsed="true">
+    <Position X="10.75" Y="6.75" Width="1.5" />
+    <NestedTypes>
+      <Class Name="Курсова.Form1.UserAccount" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Form1.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="Курсова.Form1.SalesRecord" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Form1.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="Курсова.Form1.KitchenOrder" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Form1.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="Курсова.Form1.MenuItem" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Form1.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <AssociationLine Name="ucAnalysis" Type="Курсова.ucAnalysis" ManuallyRouted="true">
+      <Path>
+        <Point X="11.891" Y="7.441" />
+        <Point X="11.891" Y="15.832" />
+        <Point X="15.58" Y="15.832" />
+        <Point X="15.58" Y="15.673" />
+        <Point X="16" Y="15.673" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>kwGAAIgAQKIHFgEAYAWCAKGqCEZAFABAgCQQASSAEAA=</HashCode>
+      <FileName>Form1.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ucLogin" />
+      <Property Name="ucMainMenu" />
+      <Property Name="ucMenuManagement" />
+      <Property Name="ucTableOrder" />
+      <Property Name="ucTables" />
+      <Property Name="ucDeliveryChoose" />
+      <Property Name="ucDeliveryDetails" />
+      <Property Name="ucHistory" />
+      <Property Name="ucKitchen" />
+      <Property Name="ucAnalysis" />
+      <Property Name="ucAccounts" />
+      <Property Name="ucReservations" />
+      <Property Name="SaleReport" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Курсова.GlobalData" Collapsed="true">
+    <Position X="13" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAA=</HashCode>
+      <FileName>GlobalData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.SaleReport" Collapsed="true">
+    <Position X="4" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAQAAAAAAgAAAACAAAAACABAAAAAAAAAAQ=</HashCode>
+      <FileName>SaleReport.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.frmAddProduct" Collapsed="true">
+    <Position X="5.75" Y="13.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAQAAAAAAAAAAAAIAgAACAAAAAAAAAAACAAAAAQAAU=</HashCode>
+      <FileName>frmAddProduct.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ReservationDialog" Collapsed="true">
+    <Position X="16" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAAAAIAAAAAAAAAAAAAAAAQAAAAAAAAAACAA=</HashCode>
+      <FileName>ReservationDialog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ucAccounts" Collapsed="true">
+    <Position X="15.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BBgQABAAAGAIEAgEFICAEAACAACAAAAAABAAAAQAAAg=</HashCode>
+      <FileName>ucAccounts.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ucAnalysis" Collapsed="true">
+    <Position X="16" Y="15.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABABAAQECQAABgBAQSAAAACAACAAAAEAAgAAAQAAAI=</HashCode>
+      <FileName>ucAnalysis.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ucDeliveryChoose" Collapsed="true">
+    <Position X="6.25" Y="15.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgCQgACAAAAAAACCAAAAiAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ucDeliveryChoose.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ucDeliveryDetails" Collapsed="true">
+    <Position X="8.25" Y="13.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAA4ACAxgBgAAQCgBEgKAAAAABAABAECQAAAAAE=</HashCode>
+      <FileName>ucDeliveryDetails.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ucHistory" Collapsed="true">
+    <Position X="8" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABACASAAAAAACAgIBiCAEAAABAEAAAGAAgAAA=</HashCode>
+      <FileName>ucHistory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ucKitchen" Collapsed="true">
+    <Position X="2.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAACAAAAAAAACAAAAGQAAAAAAAAAAEAAAAAAA=</HashCode>
+      <FileName>ucKitchen.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ucLogin" Collapsed="true">
+    <Position X="6" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgABAAAADAAAAAAgACAAAACAgAACCAAABAAAAAAAAQ=</HashCode>
+      <FileName>ucLogin.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ucMainMenu" Collapsed="true">
+    <Position X="0.75" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAABAgCAQAYAAAASEQAQSAAAIJECAEFAgEgIAAgg=</HashCode>
+      <FileName>ucMainMenu.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ucMenuManagement" Collapsed="true">
+    <Position X="5.75" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAQCAACAQAAAAAACAAEgCRgAgEAINACAAAAAQABI=</HashCode>
+      <FileName>ucMenuManagement.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="frmAddProduct" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Курсова.ucReservations" Collapsed="true">
+    <Position X="15.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAACgACAAAEEAAAGABQACAEABAIAwBQgIgEAAKRg=</HashCode>
+      <FileName>ucReservations.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ReservationDialog" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Курсова.ucTableOrder" Collapsed="true">
+    <Position X="17.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABBCQagUhKwCBAkSEECAAGADJCgBIIGgAAAhoUABQCc=</HashCode>
+      <FileName>ucTableOrder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Курсова.ucTables" Collapsed="true">
+    <Position X="20" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAAAAACAAABAAAQCAgAACAIAAAAAAAAACAAAAAAg=</HashCode>
+      <FileName>ucTables.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
