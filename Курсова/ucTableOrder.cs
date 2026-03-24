@@ -33,7 +33,13 @@ namespace Курсова
             orderConfirmed = false;
 
             flpProducts.SizeChanged += (s, ev) => AlignProductButtons();
+
             defaultPadding = flpProducts.Padding;
+
+            if (flpCategories != null)
+            {
+                defaultPadding = new Padding(defaultPadding.Left, defaultPadding.Top, flpCategories.Width + 20, defaultPadding.Bottom);
+            }
 
             LoadMenuFromDatabase();
 
@@ -41,7 +47,6 @@ namespace Курсова
 
             btnAllCategories_Click(null, null);
         }
-
 
         private void LoadMenuFromDatabase()
         {
@@ -51,7 +56,6 @@ namespace Курсова
                 using (MySqlConnection conn = DbHelper.GetConnection())
                 {
                     if (conn.State == ConnectionState.Closed) conn.Open();
-
 
                     string query = "SELECT Name, Price, Category FROM menuitems";
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
@@ -120,7 +124,9 @@ namespace Курсова
         {
             Button btn = new Button();
             btn.Text = text;
-            btn.Size = new Size(180, 60);
+
+            btn.Size = new Size(180, 80);
+
             btn.Margin = new Padding(5);
             btn.BackColor = bgColor;
             btn.ForeColor = Color.White;
@@ -156,7 +162,8 @@ namespace Курсова
 
             Control first = flpProducts.Controls[0];
             int btnWidth = first.Width + first.Margin.Left + first.Margin.Right;
-            int availableWidth = flpProducts.Width - SystemInformation.VerticalScrollBarWidth - flpProducts.Padding.Right;
+
+            int availableWidth = flpProducts.Width - SystemInformation.VerticalScrollBarWidth - defaultPadding.Right;
 
             int columns = availableWidth / btnWidth;
             if (columns <= 0) columns = 1;

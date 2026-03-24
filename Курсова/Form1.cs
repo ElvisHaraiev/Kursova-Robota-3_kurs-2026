@@ -198,7 +198,7 @@ namespace Курсова
             btnDynamicBack = new Button();
             btnDynamicBack.Text = "⬅ НАЗАД";
             btnDynamicBack.Font = new Font("Segoe UI", 12, FontStyle.Bold);
-            btnDynamicBack.BackColor = Color.FromArgb(70, 70, 80);
+            btnDynamicBack.BackColor = Color.Blue;
             btnDynamicBack.ForeColor = Color.White;
             btnDynamicBack.FlatStyle = FlatStyle.Flat;
             btnDynamicBack.FlatAppearance.BorderSize = 0;

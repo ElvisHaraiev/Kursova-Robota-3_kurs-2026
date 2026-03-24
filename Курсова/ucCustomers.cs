@@ -23,7 +23,9 @@ namespace Курсова
             using (MySqlConnection conn = DbHelper.GetConnection())
             {
                 if (conn.State == ConnectionState.Closed) conn.Open();
-                string query = "SELECT id, phone, name, address, client_type, total_orders FROM clients ORDER BY total_orders DESC";
+
+                string query = "SELECT id, phone, name, address, client_type, total_orders FROM clients ORDER BY id DESC";
+
                 using (MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn))
                 {
                     adapter.Fill(dt);
@@ -157,6 +159,12 @@ namespace Курсова
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 AllowUserToAddRows = false,
                 ReadOnly = true,
+
+                RowTemplate = new DataGridViewRow { Height = 40 },
+                AllowUserToResizeColumns = false,
+                AllowUserToResizeRows = false,
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
+
                 DefaultCellStyle = new DataGridViewCellStyle { Font = new Font("Segoe UI", 12), SelectionBackColor = Color.MediumSlateBlue },
                 ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle { Font = new Font("Segoe UI", 12, FontStyle.Bold), BackColor = Color.FromArgb(240, 240, 240) }
             };
