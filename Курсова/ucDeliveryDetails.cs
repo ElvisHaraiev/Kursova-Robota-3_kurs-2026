@@ -10,23 +10,6 @@ using System.Windows.Forms;
 
 namespace Курсова
 {
-    public interface IDiscountStrategy
-    {
-        double CalculateDiscount(double totalAmount);
-        string GetDiscountName();
-    }
-
-    public class NewCustomerDiscount : IDiscountStrategy
-    {
-        public double CalculateDiscount(double totalAmount) => totalAmount * 0.20;
-        public string GetDiscountName() => "Знижка 20% (Новий клієнт)";
-    }
-
-    public class NoDiscount : IDiscountStrategy
-    {
-        public double CalculateDiscount(double totalAmount) => 0;
-        public string GetDiscountName() => "Без знижки";
-    }
 
     public partial class ucDeliveryDetails : UserControl
     {
@@ -131,16 +114,21 @@ namespace Курсова
 
         private void BtnApplyPromo_Click(object sender, EventArgs e)
         {
+            IDiscountStrategy discountStrategy;
+
             if (txtPromo.Text.Trim().ToUpper() == "WELCOME2026")
             {
                 if (!isDiscountApplied)
                 {
+                    discountStrategy = new PromoCodeDiscount();
+
                     isDiscountApplied = true;
-                    discountAmount = originalTotal * 0.20;
+                    discountAmount = discountStrategy.CalculateDiscount(originalTotal);
                     currentTotal = originalTotal - discountAmount;
 
                     UpdateSummaryLabel();
-                    ShowModernAlert("Промокод успішно застосовано! Знижка 20%.", "Успіх", false);
+
+                    ShowModernAlert($"{discountStrategy.GetDiscountName()} успішно застосовано!", "Успіх", false);
                 }
                 else
                 {
@@ -149,6 +137,7 @@ namespace Курсова
             }
             else
             {
+                discountStrategy = new NoDiscount();
                 ShowModernAlert("Недійсний або прострочений промокод!", "Помилка", false);
             }
         }
