@@ -16,6 +16,7 @@ namespace Курсова
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            DbHelper.InitializeDatabase();
             Application.Run(new Form1());
         }
     }
