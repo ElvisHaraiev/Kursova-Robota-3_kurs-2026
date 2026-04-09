@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
@@ -15,9 +16,7 @@ namespace Курсова
         private TextBox txtUsername, txtPassword;
         private ComboBox cmbRole;
         private string actionType = "";
-
         private int selectedAccountId = 0;
-        private string selectedAccountName = "";
 
         public ucAccounts()
         {
@@ -30,7 +29,9 @@ namespace Курсова
             RefreshAccountList();
         }
 
-        private void ucAccounts_Load(object sender, EventArgs e) { }
+        private void ucAccounts_Load(object sender, EventArgs e)
+        {
+        }
 
         private void InitializeLayout()
         {
@@ -53,7 +54,7 @@ namespace Курсова
             btnAddNew.FlatAppearance.BorderSize = 0;
 
             int radius = 20;
-            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+            GraphicsPath path = new GraphicsPath();
             path.AddArc(0, 0, radius, radius, 180, 90);
             path.AddArc(btnAddNew.Width - radius, 0, radius, radius, 270, 90);
             path.AddArc(btnAddNew.Width - radius, btnAddNew.Height - radius, radius, radius, 0, 90);
@@ -75,8 +76,8 @@ namespace Курсова
             dgvAccounts.AllowUserToAddRows = false;
             dgvAccounts.AllowUserToResizeRows = false;
             dgvAccounts.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvAccounts.DefaultCellStyle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-            dgvAccounts.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            dgvAccounts.DefaultCellStyle.Font = new Font("Segoe UI", 12F);
+            dgvAccounts.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
             dgvAccounts.RowTemplate.Height = 60;
             dgvAccounts.EnableHeadersVisualStyles = false;
             dgvAccounts.ColumnHeadersHeight = 60;
@@ -102,12 +103,10 @@ namespace Курсова
             txtUsername = new TextBox() { Font = new Font("Segoe UI", 16), Location = new Point(30, 110), Width = 340 };
 
             Label l2 = new Label() { Text = "Пароль:", Font = new Font("Segoe UI", 12), Location = new Point(30, 160), AutoSize = true };
-            txtPassword = new TextBox() { Font = new Font("Segoe UI", 16), Location = new Point(30, 190), Width = 340 };
+            txtPassword = new TextBox() { Font = new Font("Segoe UI", 16), Location = new Point(30, 190), Width = 340, PasswordChar = '•' };
 
             Label l3 = new Label() { Text = "Посада / Права:", Font = new Font("Segoe UI", 12), Location = new Point(30, 240), AutoSize = true };
             cmbRole = new ComboBox() { Font = new Font("Segoe UI", 16), Location = new Point(30, 270), Width = 340, DropDownStyle = ComboBoxStyle.DropDownList };
-
-            // 🚀 AŞÇI (КУХАР) ROLÜ EKLENDİ!
             cmbRole.Items.AddRange(new string[] { "Admin", "Працівник", "Кухар" });
 
             Button btnSave = new Button() { Text = "ЗБЕРЕГТИ", Font = new Font("Segoe UI", 12, FontStyle.Bold), BackColor = Color.MediumSeaGreen, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Size = new Size(160, 50), Location = new Point(30, 350), Cursor = Cursors.Hand };
@@ -130,8 +129,7 @@ namespace Курсова
             if (type == "Edit")
             {
                 txtUsername.Text = user;
-                txtPassword.Text = pass;
-
+                txtPassword.Text = "";
                 if (cmbRole.Items.Contains(role)) cmbRole.SelectedItem = role;
                 else cmbRole.SelectedIndex = 1;
             }
@@ -151,13 +149,10 @@ namespace Курсова
         private void RefreshAccountList()
         {
             dgvAccounts.Columns.Clear();
-
             using (MySqlConnection conn = DbHelper.GetConnection())
             {
                 if (conn == null || conn.State != ConnectionState.Open) return;
-
-                string query = "SELECT Id, Username AS Користувач, Password AS Пароль, Role AS Посада FROM Users";
-
+                string query = "SELECT Id, Username AS Користувач, password_hash AS Пароль, Role AS Посада FROM Users";
                 using (MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn))
                 {
                     DataTable dt = new DataTable();
@@ -166,59 +161,49 @@ namespace Курсова
                 }
             }
 
+            AddActionButton("Edit", "✎", Color.Orange);
+            AddActionButton("Delete", "🗑", Color.Crimson);
+
             dgvAccounts.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvAccounts.Columns["Id"].Visible = false;
-
-            foreach (DataGridViewColumn col in dgvAccounts.Columns)
-                col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-
-            AddActionButton("Edit", "✏️", Color.Orange);
-            AddActionButton("Delete", "🗑️", Color.Crimson);
+            if (dgvAccounts.Columns["Id"] != null) dgvAccounts.Columns["Id"].Width = 50;
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtUsername.Text) || string.IsNullOrWhiteSpace(txtPassword.Text) || cmbRole.SelectedIndex == -1)
             {
-                frmModernMsgBox.Show("Будь ласка, заповніть усі поля!", "Помилка");
+                MessageBox.Show("Будь ласка, заповніть усі поля!", "Помилка");
                 return;
             }
+
+            string hashedPassword = SecurityHelper.HashPassword(txtPassword.Text.Trim());
 
             using (MySqlConnection conn = DbHelper.GetConnection())
             {
                 if (conn == null || conn.State != ConnectionState.Open) return;
-
-                string query = "";
-                if (actionType == "Add")
-                {
-                    query = "INSERT INTO Users (Username, Password, Role) VALUES (@user, @pass, @role)";
-                }
-                else if (actionType == "Edit")
-                {
-                    query = "UPDATE Users SET Username=@user, Password=@pass, Role=@role WHERE Id=@id";
-                }
+                string query = (actionType == "Add")
+                    ? "INSERT INTO Users (Username, password_hash, Role) VALUES (@user, @pass, @role)"
+                    : "UPDATE Users SET Username=@user, password_hash=@pass, Role=@role WHERE Id=@id";
 
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@user", txtUsername.Text.Trim());
-                    cmd.Parameters.AddWithValue("@pass", txtPassword.Text.Trim());
+                    cmd.Parameters.AddWithValue("@pass", hashedPassword);
                     cmd.Parameters.AddWithValue("@role", cmbRole.SelectedItem.ToString());
-
-                    if (actionType == "Edit")
-                        cmd.Parameters.AddWithValue("@id", selectedAccountId);
+                    if (actionType == "Edit") cmd.Parameters.AddWithValue("@id", selectedAccountId);
 
                     try
                     {
                         cmd.ExecuteNonQuery();
+                        MessageBox.Show("Дані успішно збережено!", "Успіх");
                     }
                     catch (Exception ex)
                     {
-                        frmModernMsgBox.Show("Помилка збереження! Можливо, це ім'я вже існує.\n" + ex.Message, "Помилка");
+                        MessageBox.Show("Помилка збереження!\n" + ex.Message, "Помилка");
                         return;
                     }
                 }
             }
-
             pnlPopup.Visible = false;
             dgvAccounts.Enabled = true;
             RefreshAccountList();
@@ -227,30 +212,21 @@ namespace Курсова
         private void DgvAccounts_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
-
             int id = Convert.ToInt32(dgvAccounts.Rows[e.RowIndex].Cells["Id"].Value);
             string user = dgvAccounts.Rows[e.RowIndex].Cells["Користувач"].Value.ToString();
-            string pass = dgvAccounts.Rows[e.RowIndex].Cells["Пароль"].Value.ToString();
             string role = dgvAccounts.Rows[e.RowIndex].Cells["Посада"].Value.ToString();
-
             string clickedCol = dgvAccounts.Columns[e.ColumnIndex].HeaderText;
 
-            if (clickedCol == "Редагувати")
-            {
-                OpenPopup("Edit", id, user, pass, role);
-            }
+            if (clickedCol == "Редагувати") OpenPopup("Edit", id, user, "", role);
             else if (clickedCol == "Видалити")
             {
                 if (role == "Admin" && CountAdmins() <= 1)
                 {
-                    frmModernMsgBox.Show("У системі повинен залишитися хоча б один Admin! Ви не можете видалити цей акаунт.", "Помилка безпеки");
+                    MessageBox.Show("Повинен залишитися хоча б один Admin!", "Помилка");
                     return;
                 }
-
-                if (frmModernMsgBox.Show($"Ви впевнені, що хочете видалити акаунт {user}?", "Підтвердження", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                {
+                if (MessageBox.Show($"Видалити {user}?", "Підтвердження", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     DeleteUser(id);
-                }
             }
         }
 
@@ -259,9 +235,7 @@ namespace Курсова
             using (MySqlConnection conn = DbHelper.GetConnection())
             {
                 if (conn == null || conn.State != ConnectionState.Open) return;
-
-                string query = "DELETE FROM Users WHERE Id = @id";
-                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                using (MySqlCommand cmd = new MySqlCommand("DELETE FROM Users WHERE Id = @id", conn))
                 {
                     cmd.Parameters.AddWithValue("@id", id);
                     cmd.ExecuteNonQuery();
@@ -272,31 +246,22 @@ namespace Курсова
 
         private int CountAdmins()
         {
-            int count = 0;
             using (MySqlConnection conn = DbHelper.GetConnection())
             {
-                if (conn != null && conn.State == ConnectionState.Open)
-                {
-                    string query = "SELECT COUNT(*) FROM Users WHERE Role = 'Admin'";
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
-                    {
-                        count = Convert.ToInt32(cmd.ExecuteScalar());
-                    }
-                }
+                if (conn == null || conn.State != ConnectionState.Open) return 0;
+                using (MySqlCommand cmd = new MySqlCommand("SELECT COUNT(*) FROM Users WHERE Role = 'Admin'", conn))
+                    return Convert.ToInt32(cmd.ExecuteScalar());
             }
-            return count;
         }
 
         private void AddActionButton(string name, string icon, Color color)
         {
             DataGridViewButtonColumn btn = new DataGridViewButtonColumn();
             btn.Name = name;
-            btn.HeaderText = name == "Edit" ? "Редагувати" : "Видалити";
+            btn.HeaderText = (name == "Edit") ? "Редагувати" : "Видалити";
             btn.Text = icon;
             btn.UseColumnTextForButtonValue = true;
-            btn.Width = 80;
-            btn.MinimumWidth = 80;
-            btn.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            btn.Width = 100;
             btn.FlatStyle = FlatStyle.Flat;
             btn.DefaultCellStyle.ForeColor = color;
             dgvAccounts.Columns.Add(btn);

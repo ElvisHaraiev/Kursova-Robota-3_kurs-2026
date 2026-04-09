@@ -6,29 +6,40 @@ using System.Threading.Tasks;
 
 namespace Курсова
 {
-
     public interface IDiscountStrategy
     {
-        double CalculateDiscount(double totalAmount);
-        string GetDiscountName();
+        decimal CalculateDiscountAmount(decimal totalAmount);
     }
 
-    public class NewCustomerDiscount : IDiscountStrategy
+    public class PercentageDiscountStrategy : IDiscountStrategy
     {
-        public double CalculateDiscount(double totalAmount) => totalAmount * 0.20;
-        public string GetDiscountName() => "Знижка 20% (Новий клієнт)";
+        private readonly decimal _percentage;
+
+        public PercentageDiscountStrategy(decimal percentage)
+        {
+            if (percentage < 0m || percentage > 1m)
+                throw new ArgumentOutOfRangeException(nameof(percentage), "Відсоток знижки має бути в межах від 0 до 1.");
+
+            _percentage = percentage;
+        }
+
+        public decimal CalculateDiscountAmount(decimal totalAmount)
+        {
+            if (totalAmount < 0m)
+                throw new ArgumentException("Сума замовлення не може бути від'ємною.", nameof(totalAmount));
+
+            return totalAmount * _percentage;
+        }
     }
 
-
-    public class NoDiscount : IDiscountStrategy
+    public class NoDiscountStrategy : IDiscountStrategy
     {
-        public double CalculateDiscount(double totalAmount) => 0;
-        public string GetDiscountName() => "Без знижки";
-    }
+        public decimal CalculateDiscountAmount(decimal totalAmount)
+        {
+            if (totalAmount < 0m)
+                throw new ArgumentException("Сума замовлення не може бути від'ємною.", nameof(totalAmount));
 
-    public class PromoCodeDiscount : IDiscountStrategy
-    {
-        public double CalculateDiscount(double totalAmount) => totalAmount * 0.20;
-        public string GetDiscountName() => "Знижка за промокодом";
+            return 0m;
+        }
     }
 }

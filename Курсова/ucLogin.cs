@@ -170,16 +170,18 @@ namespace Курсова
 
             try
             {
+                string hashedPass = SecurityHelper.HashPassword(enteredPass);
+
                 using (MySqlConnection conn = DbHelper.GetConnection())
                 {
                     if (conn == null || conn.State != ConnectionState.Open) return;
 
-                    string query = "SELECT Role FROM Users WHERE Username = @user AND Password = @pass";
+                    string query = "SELECT Role FROM Users WHERE Username = @user AND password_hash = @hash";
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@user", enteredUser);
-                        cmd.Parameters.AddWithValue("@pass", enteredPass);
+                        cmd.Parameters.AddWithValue("@hash", hashedPass);
 
                         using (MySqlDataReader reader = cmd.ExecuteReader())
                         {
@@ -203,8 +205,10 @@ namespace Курсова
                             }
                             else
                             {
+
                                 lblError.Text = "Неправильне ім'я користувача або пароль!";
                                 lblError.Visible = true;
+                                txtPassword.Clear();
                             }
                         }
                     }
@@ -218,7 +222,7 @@ namespace Курсова
 
         public GraphicsPath RoundedRect(Rectangle bounds, int radius)
         {
-            int diameter = radius * 2;
+            int diameter = radius * 2;AdjustableArrowCap on;
             Size size = new Size(diameter, diameter);
             Rectangle arc = new Rectangle(bounds.Location, size);
             GraphicsPath path = new GraphicsPath();

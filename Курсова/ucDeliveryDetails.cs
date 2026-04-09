@@ -5,12 +5,13 @@ using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Курсова
 {
-
     public partial class ucDeliveryDetails : UserControl
     {
         public string CartContent { get; set; }
@@ -25,9 +26,9 @@ namespace Курсова
         private TextBox txtPromo;
         private Label lblOrderSummary;
 
-        private double originalTotal = 0;
-        private double currentTotal = 0;
-        private double discountAmount = 0;
+        private decimal originalTotal = 0m;
+        private decimal currentTotal = 0m;
+        private decimal discountAmount = 0m;
         private bool isDiscountApplied = false;
 
         public ucDeliveryDetails()
@@ -44,7 +45,7 @@ namespace Курсова
 
             if (!string.IsNullOrEmpty(TotalAmount))
             {
-                double.TryParse(TotalAmount.Replace("₴", "").Trim(), out originalTotal);
+                decimal.TryParse(TotalAmount.Replace("₴", "").Trim(), out originalTotal);
                 currentTotal = originalTotal;
             }
 
@@ -120,15 +121,15 @@ namespace Курсова
             {
                 if (!isDiscountApplied)
                 {
-                    discountStrategy = new PromoCodeDiscount();
+                    discountStrategy = new PercentageDiscountStrategy(0.20m);
 
                     isDiscountApplied = true;
-                    discountAmount = discountStrategy.CalculateDiscount(originalTotal);
+                    discountAmount = discountStrategy.CalculateDiscountAmount(originalTotal);
                     currentTotal = originalTotal - discountAmount;
 
                     UpdateSummaryLabel();
 
-                    ShowModernAlert($"{discountStrategy.GetDiscountName()} успішно застосовано!", "Успіх", false);
+                    ShowModernAlert("Знижка за промокодом (20%) успішно застосована!", "Успіх", false);
                 }
                 else
                 {
@@ -137,7 +138,7 @@ namespace Курсова
             }
             else
             {
-                discountStrategy = new NoDiscount();
+                discountStrategy = new NoDiscountStrategy();
                 ShowModernAlert("Недійсний або прострочений промокод!", "Помилка", false);
             }
         }
@@ -184,7 +185,7 @@ namespace Курсова
             string clientName = txtFullName.Text.Trim();
             string fullAddress = $"{txtStreet.Text}, Буд. {txtBuilding.Text}, Кв/Пов: {txtApt.Text}";
 
-            IDiscountStrategy discountStrategy = new NoDiscount();
+            IDiscountStrategy discountStrategy = new NoDiscountStrategy();
             bool isNewClient = false;
             string extraDiscountMsg = "";
             string deliveryName = "";
@@ -223,13 +224,14 @@ namespace Курсова
 
                         if (!isDiscountApplied)
                         {
-                            discountStrategy = new NewCustomerDiscount();
-                            double newDiscount = discountStrategy.CalculateDiscount(originalTotal);
+                            // Оновлена логіка стратегії
+                            discountStrategy = new PercentageDiscountStrategy(0.20m);
+                            decimal newDiscount = discountStrategy.CalculateDiscountAmount(originalTotal);
                             discountAmount += newDiscount;
                             currentTotal = originalTotal - discountAmount;
                             isDiscountApplied = true;
 
-                            extraDiscountMsg = $"\n🎉 {discountStrategy.GetDiscountName()} успішно застосована!";
+                            extraDiscountMsg = "\n🎉 Знижка 20% (Новий клієнт) успішно застосована!";
                         }
                     }
                     else
@@ -296,7 +298,6 @@ namespace Курсова
                         }
                     }
 
-
                     Form1.KitchenOrder kitchenTicket = new Form1.KitchenOrder
                     {
                         TableName = "📦 " + deliveryName,
@@ -319,7 +320,6 @@ namespace Курсова
                     };
                     Form1.SalesHistory.Add(newSalesRecord);
                 }
-
 
                 string safeDeliveryName = deliveryName;
                 _ = Task.Run(async () =>

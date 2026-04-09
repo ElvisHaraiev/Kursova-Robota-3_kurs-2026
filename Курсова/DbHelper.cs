@@ -1,15 +1,16 @@
-﻿using System;
+﻿using Microsoft.VisualBasic.ApplicationServices;
+using MySql.Data.MySqlClient;
+using System;
 using System.Data;
 using System.Windows.Forms;
-using MySql.Data.MySqlClient;
 
 namespace Курсова
 {
     public static class DbHelper
     {
         public static string connectionString = "Server=localhost;Database=restaurant_db;Uid=root;Pwd=;";
-
         private static string serverConnectionString = "Server=localhost;Uid=root;Pwd=;";
+
         public static MySqlConnection GetConnection()
         {
             MySqlConnection conn = new MySqlConnection(connectionString);
@@ -67,96 +68,94 @@ namespace Курсова
 
                     MySqlCommand cmd = new MySqlCommand("CREATE DATABASE IF NOT EXISTS `restaurant_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;", conn);
                     cmd.ExecuteNonQuery();
-
-                    // 2. Veritabanını kullanmaya başla
                     cmd.CommandText = "USE `restaurant_db`;";
                     cmd.ExecuteNonQuery();
 
                     string createTablesScript = @"
-                        -- Kategoriler Tablosu
-                        CREATE TABLE IF NOT EXISTS `categories` (
-                            `id` INT AUTO_INCREMENT PRIMARY KEY,
-                            `name` VARCHAR(100) NOT NULL
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                CREATE TABLE IF NOT EXISTS `categories` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `name` VARCHAR(100) NOT NULL
+                ) ENGINE=InnoDB;
 
-                        -- Müşteriler (CRM) Tablosu
-                        CREATE TABLE IF NOT EXISTS `clients` (
-                            `id` INT AUTO_INCREMENT PRIMARY KEY,
-                            `phone` VARCHAR(20) UNIQUE,
-                            `name` VARCHAR(100),
-                            `address` TEXT,
-                            `total_orders` INT DEFAULT 0,
-                            `client_type` VARCHAR(50)
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                CREATE TABLE IF NOT EXISTS `clients` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `phone` VARCHAR(20) UNIQUE,
+                    `name` VARCHAR(100),
+                    `address` TEXT,
+                    `total_orders` INT DEFAULT 0,
+                    `client_type` VARCHAR(50)
+                ) ENGINE=InnoDB;
 
-                        -- Menü Ürünleri Tablosu
-                        CREATE TABLE IF NOT EXISTS `menuitems` (
-                            `id` INT AUTO_INCREMENT PRIMARY KEY,
-                            `name` VARCHAR(100) NOT NULL,
-                            `price` DOUBLE,
-                            `category` VARCHAR(100),
-                            `is_available` TINYINT(1) DEFAULT 1,
-                            `image_path` TEXT
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                CREATE TABLE IF NOT EXISTS `menuitems` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `name` VARCHAR(100) NOT NULL,
+                    `price` DECIMAL(18, 2), -- Змінено на DECIMAL
+                    `category` VARCHAR(100),
+                    `is_available` TINYINT(1) DEFAULT 1,
+                    `image_path` TEXT
+                ) ENGINE=InnoDB;
 
-                        -- Siparişler Tablosu
-                        CREATE TABLE IF NOT EXISTS `orders` (
-                            `id` INT AUTO_INCREMENT PRIMARY KEY,
-                            `TableName` VARCHAR(100),
-                            `WaiterName` VARCHAR(100),
-                            `OrderDetails` TEXT,
-                            `TotalAmount` DOUBLE,
-                            `PaymentMethod` VARCHAR(50),
-                            `Status` VARCHAR(50),
-                            `OrderDate` DATETIME DEFAULT CURRENT_TIMESTAMP
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                CREATE TABLE IF NOT EXISTS `orders` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `TableName` VARCHAR(100),
+                    `WaiterName` VARCHAR(100),
+                    `OrderDetails` TEXT,
+                    `TotalAmount` DECIMAL(18, 2), -- Змінено на DECIMAL
+                    `PaymentMethod` VARCHAR(50),
+                    `Status` VARCHAR(50),
+                    `OrderDate` DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB;
 
-                        -- Sipariş Detayları (Order Items) Tablosu
-                        CREATE TABLE IF NOT EXISTS `order_items` (
-                            `id` INT AUTO_INCREMENT PRIMARY KEY,
-                            `order_id` INT,
-                            `item_name` VARCHAR(100),
-                            `quantity` INT,
-                            `price` DOUBLE
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                CREATE TABLE IF NOT EXISTS `order_items` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `order_id` INT,
+                    `item_name` VARCHAR(100),
+                    `quantity` INT,
+                    `price` DECIMAL(18, 2), -- Змінено на DECIMAL
+                    FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE
+                ) ENGINE=InnoDB;
 
-                        -- Rezervasyonlar Tablosu
-                        CREATE TABLE IF NOT EXISTS `reservations` (
-                            `id` INT AUTO_INCREMENT PRIMARY KEY,
-                            `client_name` VARCHAR(100),
-                            `phone` VARCHAR(20),
-                            `table_name` VARCHAR(50),
-                            `res_date` DATE,
-                            `res_time` VARCHAR(20),
-                            `guests` INT,
-                            `status` VARCHAR(50) DEFAULT 'Active',
-                            `notes` TEXT
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-                        -- Kullanıcılar (Personel) Tablosu
-                        CREATE TABLE IF NOT EXISTS `users` (
-                            `id` INT AUTO_INCREMENT PRIMARY KEY,
-                            `username` VARCHAR(50) UNIQUE,
-                            `password` VARCHAR(255),
-                            `role` VARCHAR(50)
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-                    ";
+                CREATE TABLE IF NOT EXISTS `users` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `username` VARCHAR(50) UNIQUE,
+                    `password_hash` VARCHAR(255),
+                    `role` VARCHAR(50)
+                ) ENGINE=InnoDB;
+            ";
                     cmd.CommandText = createTablesScript;
                     cmd.ExecuteNonQuery();
 
+                    try
+                    {
+                        cmd.CommandText = "ALTER TABLE `users` CHANGE `password` `password_hash` VARCHAR(255);";
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch {}
+
+                    try
+                    {
+                        cmd.CommandText = "ALTER TABLE `menuitems` MODIFY `price` DECIMAL(18, 2);";
+                        cmd.ExecuteNonQuery();
+                        cmd.CommandText = "ALTER TABLE `orders` MODIFY `TotalAmount` DECIMAL(18, 2);";
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch { }
+
                     cmd.CommandText = "SELECT COUNT(*) FROM `users`;";
-                    long userCount = (long)cmd.ExecuteScalar();
+                    long userCount = Convert.ToInt64(cmd.ExecuteScalar());
                     if (userCount == 0)
                     {
-                        cmd.CommandText = "INSERT INTO `users` (`username`, `password`, `role`) VALUES ('admin', '1234', 'Admin');";
+                        cmd.CommandText = "INSERT INTO `users` (`username`, `password_hash`, `role`) VALUES ('admin', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'Admin');";
                         cmd.ExecuteNonQuery();
                     }
                 }
             }
             catch (Exception ex)
             {
-
+                MessageBox.Show("Помилка ініціалізації БД: " + ex.Message);
             }
         }
+
     }
 }
+  

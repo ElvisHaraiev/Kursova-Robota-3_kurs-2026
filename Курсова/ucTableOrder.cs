@@ -42,10 +42,12 @@ namespace Курсова
             }
 
             LoadMenuFromDatabase();
-
             LoadCategoriesFromDatabase();
 
-            btnAllCategories_Click(null, null);
+            if (flpCategories != null && flpCategories.Controls.Count > 0)
+            {
+                btnAllCategories_Click(flpCategories.Controls[0], null);
+            }
         }
 
         private void LoadMenuFromDatabase()
@@ -87,7 +89,7 @@ namespace Курсова
 
             flpCategories.Controls.Clear();
 
-            Button btnAll = CreateCategoryButton("Всі страви", Color.Crimson);
+            Button btnAll = CreateCategoryButton("Всі страви", Color.DarkSlateBlue);
             btnAll.Click += btnAllCategories_Click;
             flpCategories.Controls.Add(btnAll);
 
@@ -104,10 +106,9 @@ namespace Курсова
                         while (reader.Read())
                         {
                             string catName = reader["name"].ToString();
-
                             Button btnCat = CreateCategoryButton(catName, Color.DarkSlateBlue);
 
-                            btnCat.Click += (s, e) => FilterByCategory(catName);
+                            btnCat.Click += (s, e) => FilterByCategory(catName, (Button)s);
 
                             flpCategories.Controls.Add(btnCat);
                         }
@@ -124,9 +125,7 @@ namespace Курсова
         {
             Button btn = new Button();
             btn.Text = text;
-
             btn.Size = new Size(180, 80);
-
             btn.Margin = new Padding(5);
             btn.BackColor = bgColor;
             btn.ForeColor = Color.White;
@@ -145,6 +144,48 @@ namespace Курсова
             btn.Region = new Region(path);
 
             return btn;
+        }
+
+        private void HighlightSelectedCategory(Button selectedButton)
+        {
+            if (flpCategories == null) return;
+
+            foreach (Control ctrl in flpCategories.Controls)
+            {
+                if (ctrl is Button btn)
+                {
+                    btn.BackColor = Color.DarkSlateBlue;
+                }
+            }
+
+            if (selectedButton != null)
+            {
+                selectedButton.BackColor = Color.Crimson;
+            }
+        }
+
+        private void FilterByCategory(string cat, Button clickedButton)
+        {
+            HighlightSelectedCategory(clickedButton);
+
+            flpProducts.Controls.Clear();
+            AddProductsByCategoryID(cat);
+            AlignProductButtons();
+        }
+
+        private void btnAllCategories_Click(object sender, EventArgs e)
+        {
+            if (sender is Button clickedButton)
+            {
+                HighlightSelectedCategory(clickedButton);
+            }
+
+            flpProducts.Controls.Clear();
+            foreach (var item in Form1.MenuList.OrderBy(x => x.Category))
+            {
+                DisplayProductButton(item.Name, item.Price);
+            }
+            AlignProductButtons();
         }
 
         private void AddProductsByCategoryID(string categoryName)
@@ -510,23 +551,6 @@ namespace Курсова
             {
                 frmModernMsgBox.Show("Помилка бази даних: " + ex.Message, "Помилка");
             }
-        }
-
-        private void FilterByCategory(string cat)
-        {
-            flpProducts.Controls.Clear();
-            AddProductsByCategoryID(cat);
-            AlignProductButtons();
-        }
-
-        private void btnAllCategories_Click(object sender, EventArgs e)
-        {
-            flpProducts.Controls.Clear();
-            foreach (var item in Form1.MenuList.OrderBy(x => x.Category))
-            {
-                DisplayProductButton(item.Name, item.Price);
-            }
-            AlignProductButtons();
         }
 
         private void btnPayment_Click(object sender, EventArgs e)

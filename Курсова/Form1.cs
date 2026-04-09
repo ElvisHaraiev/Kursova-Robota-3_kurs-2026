@@ -14,7 +14,7 @@ namespace Курсова
 
         public string RestaurantName { get; set; } = "MY RESTAURANT";
         public Image RestaurantLogo { get; set; } = null;
-
+        
         private PictureBox pbHeaderLogo;
         private Label lblHeaderName;
 
@@ -297,14 +297,15 @@ namespace Курсова
                     }
                     else if (isChef)
                     {
-                        if (btn.Text.Contains("Кухня") || btn.Text.Contains("Меню") || btn.Text.Contains("Столи") || btn.Text.Contains("Доставка"))
+                        if (btn.Text.Contains("Кухня") || btn.Text.Contains("Меню"))
                             btn.Visible = true;
                         else
                             btn.Visible = false;
                     }
                     else
                     {
-                        if (btn.Text.Contains("Аналітика") || btn.Text.Contains("Акаунти") || btn.Text.Contains("CRM") || btn.Text.Contains("Меню"))
+                        if (btn.Text.Contains("Аналітика") || btn.Text.Contains("Акаунти") ||
+                            btn.Text.Contains("CRM") || btn.Text.Contains("Меню"))
                             btn.Visible = false;
                         else
                             btn.Visible = true;
@@ -315,7 +316,6 @@ namespace Курсова
             pnlSideMenu.Visible = isMenuOpen;
             if (isMenuOpen) pnlSideMenu.BringToFront();
         }
-
         private void AddSidebarButton(string text, EventHandler onClick)
         {
             Button btn = new Button();
@@ -351,36 +351,31 @@ namespace Курсова
 
             bool isChef = IsChefSilently();
             bool isAdmin = IsAdminSilently();
-            bool isWaiter = !isAdmin && !isChef;
 
-
-            if (uc is ucAnalysis || uc is ucAccounts || uc is ucCustomers)
+            // 1. ПЕРЕВІРКА ПРАВ ДОСТУПУ (Security Gate)
+            if (!isAdmin) // Якщо не адмін, перевіряємо обмеження
             {
-                if (!isAdmin)
+                if (isChef)
                 {
-                    frmModernMsgBox.Show("У вас немає доступу до цього розділу!\n(Тільки для Адміністраторів)", "Доступ заборонено");
-                    return;
+                    // Кухарю дозволено ТІЛЬКИ ucKitchen та ucMenuManagement
+                    // Також дозволяємо ucMainMenu та ucLogin (щоб він міг вийти або бачити головну)
+                    if (!(uc is ucKitchen) && !(uc is ucMenuManagement) &&
+                        !(uc is ucMainMenu) && !(uc is ucLogin))
+                    {
+                        frmModernMsgBox.Show("У вас немає доступу до цього розділу!\nДозволені розділи для Кухаря: Кухня та Меню.", "Доступ заборонено");
+                        return;
+                    }
+                }
+                else
+                {
+                    // Обмеження для Офіціантів
+                    if (uc is ucAnalysis || uc is ucAccounts || uc is ucCustomers || uc is ucMenuManagement)
+                    {
+                        frmModernMsgBox.Show("У вас немає доступу до цього розділу!\nЗверніться до адміністратора.", "Доступ заборонено");
+                        return;
+                    }
                 }
             }
-
-            else if (uc is ucMenuManagement)
-            {
-                if (!isAdmin && !isChef)
-                {
-                    frmModernMsgBox.Show("У вас немає доступу до цього розділу!\n(Тільки для Адміністраторів та Кухарів)", "Доступ заборонено");
-                    return;
-                }
-            }
-
-            else if (uc is ucHistory || uc is ucReservations)
-            {
-                if (!isAdmin && !isWaiter)
-                {
-                    frmModernMsgBox.Show("У вас немає доступу до цього розділу!\n(Тільки для Адміністраторів та Офіціантів)", "Доступ заборонено");
-                    return;
-                }
-            }
-
 
             if (isMenuOpen) ToggleSidebar();
 
@@ -405,73 +400,11 @@ namespace Курсова
             bool isLoginScreen = (uc is ucLogin);
             bool isMainMenu = (uc is ucMainMenu);
 
-            if (pbHeaderLogo != null) pbHeaderLogo.Visible = true;
-            if (lblHeaderName != null) lblHeaderName.Visible = true;
-
-            if (lblUsername != null && lblUsername.Parent != null)
-            {
-                Panel topBar = (Panel)lblUsername.Parent;
-
-                foreach (Control ctrl in topBar.Controls)
-                {
-                    if (ctrl.Text == "Reports" || ctrl.Text == "Звіти" || ctrl.Name.ToLower() == "lblreports")
-                    {
-                        ctrl.Visible = false;
-                    }
-                }
-            }
-
             if (btnBurger != null) btnBurger.Visible = !isLoginScreen;
             if (btnDynamicBack != null) btnDynamicBack.Visible = !isMainMenu && !isLoginScreen;
 
-            if (lblUsername != null)
-            {
-                lblUsername.Visible = !isLoginScreen;
-                if (btnLogout != null && lblUsername.Visible)
-                {
-                    lblUsername.Location = new Point(btnLogout.Left - lblUsername.Width - 20, lblUsername.Location.Y);
-                }
-
-                if (btnExistingOrders != null)
-                {
-                    btnExistingOrders.Visible = (uc is ucTableOrder);
-
-                    if (btnExistingOrders.Visible && lblUsername.Parent != null)
-                    {
-                        Panel topBar = (Panel)lblUsername.Parent;
-                        btnExistingOrders.Location = new Point(lblUsername.Left - btnExistingOrders.Width - 20, (topBar.Height - btnExistingOrders.Height) / 2);
-                        btnExistingOrders.BringToFront();
-                    }
-                }
-            }
-
-            if (btnLogout != null)
-            {
-                btnLogout.Visible = !isLoginScreen;
-                btnLogout.BringToFront();
-            }
-
-            if (btnBack != null) btnBack.Visible = false;
-
-            if (btnAddProduct != null && lblUsername != null && lblUsername.Parent != null)
-            {
-                Panel topBar = (Panel)lblUsername.Parent;
-                btnAddProduct.Visible = (uc is ucMenuManagement);
-
-                if (btnAddProduct.Visible)
-                {
-                    Control searchBox = topBar.Controls.Find("TopSearchBox", true).FirstOrDefault();
-                    if (searchBox != null)
-                    {
-                        btnAddProduct.Location = new Point(searchBox.Location.X - btnAddProduct.Width - 15, (topBar.Height - btnAddProduct.Height) / 2);
-                    }
-                    else
-                    {
-                        btnAddProduct.Location = new Point(topBar.Width - 650, (topBar.Height - btnAddProduct.Height) / 2);
-                    }
-                }
-                btnAddProduct.BringToFront();
-            }
+            if (btnLogout != null) btnLogout.Visible = !isLoginScreen;
+            if (lblUsername != null) lblUsername.Visible = !isLoginScreen;
         }
 
         private void BtnDynamicBack_Click(object sender, EventArgs e)
