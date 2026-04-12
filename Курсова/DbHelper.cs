@@ -137,6 +137,7 @@ namespace Курсова
                     cmd.CommandText = createTablesScript;
                     cmd.ExecuteNonQuery();
 
+
                     try
                     {
                         cmd.CommandText = "ALTER TABLE `Reservations` ADD COLUMN `Email` VARCHAR(100), ADD COLUMN `GuestCount` INT;";

@@ -37,6 +37,8 @@ namespace Курсова
         {
             if (this.DesignMode) return;
 
+            // pnlTop повністю видалено, таблиця займатиме весь вільний простір
+
             AddSearchBoxToTopBar();
             LoadMenuFromDatabase();
             RefreshList();

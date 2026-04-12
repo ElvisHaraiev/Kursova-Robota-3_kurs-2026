@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic.ApplicationServices;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -14,12 +15,15 @@ namespace Курсова
 
         public string RestaurantName { get; set; } = "MY RESTAURANT";
         public Image RestaurantLogo { get; set; } = null;
-        
+
         private PictureBox pbHeaderLogo;
         private Label lblHeaderName;
 
         private Button btnLogout;
         public Button btnExistingOrders;
+
+        public Button btnGlobalAddDish;
+
         private Stack<UserControl> pageHistory = new Stack<UserControl>();
         private Button btnDynamicBack;
 
@@ -57,6 +61,7 @@ namespace Курсова
             InitializeHeader();
             AddLogoutButtonToTopBar();
             AddExistingOrdersButtonToTopBar();
+            AddGlobalAddDishButtonToTopBar();
             CreateBurgerMenu();
 
             ShowPage(new ucLogin());
@@ -110,6 +115,46 @@ namespace Курсова
             lblHeaderName.BringToFront();
         }
 
+        private void AddGlobalAddDishButtonToTopBar()
+        {
+            if (lblUsername == null || lblUsername.Parent == null) return;
+            Panel topBar = (Panel)lblUsername.Parent;
+
+            btnGlobalAddDish = new Button();
+            btnGlobalAddDish.Text = "➕ Додати страву";
+            btnGlobalAddDish.Font = new Font("Segoe UI", 12, FontStyle.Bold);
+            btnGlobalAddDish.BackColor = Color.Crimson;
+            btnGlobalAddDish.ForeColor = Color.White;
+            btnGlobalAddDish.FlatStyle = FlatStyle.Flat;
+            btnGlobalAddDish.FlatAppearance.BorderSize = 0;
+            btnGlobalAddDish.Size = new Size(200, 40);
+            btnGlobalAddDish.Cursor = Cursors.Hand;
+            btnGlobalAddDish.Visible = false;
+
+            int radius = 15;
+            GraphicsPath path = new GraphicsPath();
+            path.AddArc(0, 0, radius, radius, 180, 90);
+            path.AddArc(btnGlobalAddDish.Width - radius, 0, radius, radius, 270, 90);
+            path.AddArc(btnGlobalAddDish.Width - radius, btnGlobalAddDish.Height - radius, radius, radius, 0, 90);
+            path.AddArc(0, btnGlobalAddDish.Height - radius, radius, radius, 90, 90);
+            path.CloseAllFigures();
+            btnGlobalAddDish.Region = new Region(path);
+
+            btnGlobalAddDish.Click += btnAddProduct_Click;
+
+            topBar.Controls.Add(btnGlobalAddDish);
+
+            Action positionButton = () =>
+            {
+
+                int btnX = 220;
+                btnGlobalAddDish.Location = new Point(btnX, (topBar.Height - btnGlobalAddDish.Height) / 2);
+            };
+
+            positionButton();
+            topBar.Resize += (s, e) => positionButton();
+            btnGlobalAddDish.BringToFront();
+        }
         private void AddLogoutButtonToTopBar()
         {
             if (lblUsername == null || lblUsername.Parent == null) return;
@@ -316,6 +361,7 @@ namespace Курсова
             pnlSideMenu.Visible = isMenuOpen;
             if (isMenuOpen) pnlSideMenu.BringToFront();
         }
+
         private void AddSidebarButton(string text, EventHandler onClick)
         {
             Button btn = new Button();
@@ -352,13 +398,10 @@ namespace Курсова
             bool isChef = IsChefSilently();
             bool isAdmin = IsAdminSilently();
 
-            // 1. ПЕРЕВІРКА ПРАВ ДОСТУПУ (Security Gate)
-            if (!isAdmin) // Якщо не адмін, перевіряємо обмеження
+            if (!isAdmin)
             {
                 if (isChef)
                 {
-                    // Кухарю дозволено ТІЛЬКИ ucKitchen та ucMenuManagement
-                    // Також дозволяємо ucMainMenu та ucLogin (щоб він міг вийти або бачити головну)
                     if (!(uc is ucKitchen) && !(uc is ucMenuManagement) &&
                         !(uc is ucMainMenu) && !(uc is ucLogin))
                     {
@@ -368,7 +411,6 @@ namespace Курсова
                 }
                 else
                 {
-                    // Обмеження для Офіціантів
                     if (uc is ucAnalysis || uc is ucAccounts || uc is ucCustomers || uc is ucMenuManagement)
                     {
                         frmModernMsgBox.Show("У вас немає доступу до цього розділу!\nЗверніться до адміністратора.", "Доступ заборонено");
@@ -405,6 +447,11 @@ namespace Курсова
 
             if (btnLogout != null) btnLogout.Visible = !isLoginScreen;
             if (lblUsername != null) lblUsername.Visible = !isLoginScreen;
+
+            if (btnGlobalAddDish != null)
+            {
+                btnGlobalAddDish.Visible = (uc is ucMenuManagement);
+            }
         }
 
         private void BtnDynamicBack_Click(object sender, EventArgs e)
