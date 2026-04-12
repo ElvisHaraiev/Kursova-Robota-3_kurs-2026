@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1
--- Время создания: Мар 27 2026 г., 21:02
+-- Время создания: Апр 12 2026 г., 13:00
 -- Версия сервера: 10.4.32-MariaDB
 -- Версия PHP: 8.2.12
 
@@ -72,7 +72,9 @@ INSERT INTO `clients` (`id`, `phone`, `name`, `total_orders`, `address`, `client
 (5, '+38 (067) 888-48-48', 'aaaa', 1, 'A, Буд. 14, Кв/Пов: 2', 'Доставка'),
 (6, '+38 (067) 888-88-88', 'AAAA', 1, '-', 'Резервація'),
 (7, '+38 (067) 345-68-88', 'Kubg', 1, '-', 'Резервація'),
-(8, '+38 (067) 232-44-44', 'AAA GG', 1, 'Tarasa Sevchenko, Буд. 14A, Кв/Пов: 8, 300', 'Доставка');
+(8, '+38 (067) 232-44-44', 'AAA GG', 1, 'Tarasa Sevchenko, Буд. 14A, Кв/Пов: 8, 300', 'Доставка'),
+(10, '+38 (067) 947-32-23', 'wefsd', 1, 'ascasd, Буд. 8A, Кв/Пов: 4', 'Доставка'),
+(11, '+38 (067) 232-32-22', '2EWFDSCASC', 1, '-', 'Резервація');
 
 -- --------------------------------------------------------
 
@@ -83,7 +85,7 @@ INSERT INTO `clients` (`id`, `phone`, `name`, `total_orders`, `address`, `client
 CREATE TABLE `menuitems` (
   `Id` int(11) NOT NULL,
   `Name` varchar(100) NOT NULL,
-  `Price` decimal(10,2) NOT NULL,
+  `price` decimal(18,2) DEFAULT NULL,
   `Category` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -91,7 +93,7 @@ CREATE TABLE `menuitems` (
 -- Дамп данных таблицы `menuitems`
 --
 
-INSERT INTO `menuitems` (`Id`, `Name`, `Price`, `Category`) VALUES
+INSERT INTO `menuitems` (`Id`, `Name`, `price`, `Category`) VALUES
 (2, '🥟 Вареники з картоплею', 180.00, 'Головні страви'),
 (3, '🥬 Голубці домашні', 240.00, 'Головні страви'),
 (4, '🥔 Деруни зі сметаною', 150.00, 'Головні страви'),
@@ -173,7 +175,7 @@ CREATE TABLE `orders` (
   `TableName` varchar(20) NOT NULL,
   `WaiterName` varchar(50) DEFAULT NULL,
   `OrderDetails` text NOT NULL,
-  `TotalAmount` decimal(10,2) NOT NULL,
+  `TotalAmount` decimal(18,2) DEFAULT NULL,
   `Status` varchar(20) DEFAULT 'Pending',
   `PaymentMethod` varchar(20) DEFAULT NULL,
   `OrderDate` datetime DEFAULT current_timestamp()
@@ -215,7 +217,9 @@ INSERT INTO `orders` (`Id`, `TableName`, `WaiterName`, `OrderDetails`, `TotalAmo
 (48, 'Стіл 4', 'Admin (Admin)', '1x 🍖 Баранячі реберця BBQ - 380 ₴\n1x 🥟 Вареники з картоплею - 180 ₴\n1x 🥘 Лазанья М\'ясна - 290 ₴', 850.00, 'Paid', 'КАРТКА', '2026-03-24 00:24:26'),
 (50, 'Стіл 4', 'Admin (Admin)', '2x 🍝 Паста Карбонара - 260 ₴\n1x 🥬 Голубці домашні - 240 ₴\n1x 🍚 Плов з бараниною - 310 ₴\n1x 🍮 Тірамісу - 160 ₴', 1230.00, 'Paid', 'ГОТІВКА', '2026-03-27 10:38:48'),
 (51, '📦 Доставка #7258', 'Admin (Admin)', 'Клієнт: AAA GG\nТелефон: +38 (067) 232-44-44\nАДРЕСА: Tarasa Sevchenko, Буд. 14A, Кв/Пов: 8, 300\n\n1x 🥩 Котлети на грилі - 280 ₴\n1x 🍰 Торт Наполеон - 150 ₴\n1x 🥬 Голубці домашні - 240 ₴\n1x 🍝 Паста Карбонара - 260 ₴\n1x 🥧 Яблучний штрудель - 140 ₴\n1x 🍖 Баранячі реберця BBQ - 380 ₴\n\nЗНИЖКА: -290,00 ₴\nДО СПЛАТИ: 1 160,00 ₴', 1160.00, 'Completed', 'При Отриманні', '2026-03-27 10:41:40'),
-(52, '📦 Доставка #2053', 'Admin (Admin)', 'Клієнт: asd\nТелефон: +38 (067) 221-44-44\nАДРЕСА: AS, Буд. ASD, Кв/Пов: ASD\n\n1x 🎂 Київський торт - 210 ₴\n1x 🍝 Паста Карбонара - 260 ₴\n\nЗНИЖКА: -94,00 ₴\nДО СПЛАТИ: 376,00 ₴', 376.00, 'Completed', 'При Отриманні', '2026-03-27 12:43:09');
+(52, '📦 Доставка #2053', 'Admin (Admin)', 'Клієнт: asd\nТелефон: +38 (067) 221-44-44\nАДРЕСА: AS, Буд. ASD, Кв/Пов: ASD\n\n1x 🎂 Київський торт - 210 ₴\n1x 🍝 Паста Карбонара - 260 ₴\n\nЗНИЖКА: -94,00 ₴\nДО СПЛАТИ: 376,00 ₴', 376.00, 'Completed', 'При Отриманні', '2026-03-27 12:43:09'),
+(53, 'Стіл 4', 'Personal (Працівник)', '1x 🥟 Вареники з картоплею - 180 ₴\n2x 🥬 Голубці домашні - 240 ₴\n2x 🍝 Паста Карбонара - 260 ₴\n1x 🥧 Яблучний штрудель - 140 ₴', 1320.00, 'Pending', '-', '2026-04-10 15:01:04'),
+(54, '📦 Доставка #1786', 'Admin (Admin)', 'Клієнт: wefsd\nТелефон: +38 (067) 947-32-23\nАДРЕСА: ascasd, Буд. 8A, Кв/Пов: 4\n\n1x Sushi - 200 ₴\n1x 🍰 Медовик - 140 ₴\n2x 🍖 Баранячі реберця BBQ - 380 ₴\n\nЗНИЖКА: -220,00 ₴\nДО СПЛАТИ: 880,00 ₴', 880.00, 'Completed', 'При Отриманні', '2026-04-12 13:18:13');
 
 -- --------------------------------------------------------
 
@@ -288,7 +292,14 @@ INSERT INTO `order_items` (`id`, `order_id`, `item_name`, `quantity`, `price`) V
 (75, 51, '🥧 Яблучний штрудель', 1, 140),
 (76, 51, '🍖 Баранячі реберця BBQ', 1, 380),
 (77, 52, '🎂 Київський торт', 1, 210),
-(78, 52, '🍝 Паста Карбонара', 1, 260);
+(78, 52, '🍝 Паста Карбонара', 1, 260),
+(79, 53, '🥟 Вареники з картоплею', 1, 180),
+(80, 53, '🥬 Голубці домашні', 2, 240),
+(81, 53, '🍝 Паста Карбонара', 2, 260),
+(82, 53, '🥧 Яблучний штрудель', 1, 140),
+(83, 54, 'Sushi', 1, 200),
+(84, 54, '🍰 Медовик', 1, 140),
+(85, 54, '🍖 Баранячі реберця BBQ', 2, 380);
 
 -- --------------------------------------------------------
 
@@ -320,7 +331,8 @@ INSERT INTO `reservations` (`id`, `TableName`, `CustomerName`, `Phone`, `Email`,
 (6, 'Стіл 4', 'Aaaa', '+38 (067) 848-88-88', '', 2, '2026-03-23 18:00:00', 'Completed'),
 (7, 'Стіл 4', 'Aaa', '+38 (067) 888-88-88', '', 4, '2026-03-23 18:00:00', 'Cancelled'),
 (8, 'Стіл 4', 'AAAA', '+38 (607) 888-88-88', '', 4, '2026-03-24 18:00:00', 'Cancelled'),
-(9, 'Стіл 4', 'Kubg', '+38 (067) 345-68-88', '', 7, '2026-03-28 18:00:00', 'Completed');
+(9, 'Стіл 4', 'Kubg', '+38 (067) 345-68-88', '', 7, '2026-03-28 18:00:00', 'Completed'),
+(10, 'Стіл 24', '2EWFDSCASC', '+38 (067) 232-32-22', 'ADC', 2, '2026-04-12 10:00:00', 'Active');
 
 -- --------------------------------------------------------
 
@@ -331,7 +343,7 @@ INSERT INTO `reservations` (`id`, `TableName`, `CustomerName`, `Phone`, `Email`,
 CREATE TABLE `users` (
   `Id` int(11) NOT NULL,
   `Username` varchar(50) NOT NULL,
-  `Password` varchar(50) NOT NULL,
+  `password_hash` varchar(255) DEFAULT NULL,
   `Role` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -339,10 +351,10 @@ CREATE TABLE `users` (
 -- Дамп данных таблицы `users`
 --
 
-INSERT INTO `users` (`Id`, `Username`, `Password`, `Role`) VALUES
-(1, 'Admin', '1234', 'Admin'),
-(2, 'Personal', '0000', 'Працівник'),
-(5, 'Kitchen', '1212', 'Кухар');
+INSERT INTO `users` (`Id`, `Username`, `password_hash`, `Role`) VALUES
+(1, 'Admin', '2926a2731f4b312c08982cacf8061eb14bf65c1a87cc5d70e864e079c6220731', 'Admin'),
+(2, 'Personal', '9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0', 'Працівник'),
+(5, 'Kitchen', 'cbfad02f9ed2a8d1e08d8f74f5303e9eb93637d47f82ab6f1c15871cf8dd0481', 'Кухар');
 
 --
 -- Индексы сохранённых таблиц
@@ -406,7 +418,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT для таблицы `clients`
 --
 ALTER TABLE `clients`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT для таблицы `menuitems`
@@ -418,19 +430,19 @@ ALTER TABLE `menuitems`
 -- AUTO_INCREMENT для таблицы `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT для таблицы `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
 
 --
 -- AUTO_INCREMENT для таблицы `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT для таблицы `users`
