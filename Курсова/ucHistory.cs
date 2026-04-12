@@ -132,13 +132,13 @@ namespace Курсова
 
             if (isDelivery)
             {
-                g.DrawString("📦 ELVIS ДОСТАВКА", fontHeader, Brushes.Black, 220, currentY);
+                g.DrawString("📦 MY RESTARUANT ДОСТАВКА", fontHeader, Brushes.Black, 220, currentY);
                 currentY += 50;
                 g.DrawString("Чек на доставку", fontSubHeader, Brushes.Black, 330, currentY);
             }
             else
             {
-                g.DrawString("ELVIS RESTAURANT", fontHeader, Brushes.Black, 240, currentY);
+                g.DrawString("MY RESTAURANT", fontHeader, Brushes.Black, 240, currentY);
                 currentY += 50;
                 g.DrawString("Клієнтський чек", fontSubHeader, Brushes.Black, 330, currentY);
             }

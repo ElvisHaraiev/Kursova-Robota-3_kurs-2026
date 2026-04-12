@@ -15,6 +15,7 @@ namespace Курсова
         private Panel pnlPopup;
         private TextBox txtUsername, txtPassword;
         private ComboBox cmbRole;
+        private Label lblPasswordTitle;
         private string actionType = "";
         private int selectedAccountId = 0;
 
@@ -73,7 +74,12 @@ namespace Курсова
             dgvAccounts.BorderStyle = BorderStyle.None;
             dgvAccounts.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             dgvAccounts.RowHeadersVisible = false;
+
+            // 🚀 ЗАБЛОКОВАНО РУЧНЕ РЕДАГУВАННЯ ТАБЛИЦІ
+            dgvAccounts.ReadOnly = true;
             dgvAccounts.AllowUserToAddRows = false;
+            dgvAccounts.AllowUserToDeleteRows = false;
+
             dgvAccounts.AllowUserToResizeRows = false;
             dgvAccounts.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvAccounts.DefaultCellStyle.Font = new Font("Segoe UI", 12F);
@@ -95,29 +101,29 @@ namespace Курсова
 
         private void SetupPopup()
         {
-            pnlPopup = new Panel() { Size = new Size(400, 450), BackColor = Color.FromArgb(240, 240, 245), Visible = false, BorderStyle = BorderStyle.FixedSingle };
+            pnlPopup = new Panel() { Size = new Size(450, 450), BackColor = Color.FromArgb(240, 240, 245), Visible = false, BorderStyle = BorderStyle.FixedSingle };
 
             Label lblPopupTitle = new Label() { Text = "Дані персоналу", Font = new Font("Segoe UI", 18, FontStyle.Bold), Location = new Point(30, 20), AutoSize = true };
 
             Label l1 = new Label() { Text = "Ім'я користувача:", Font = new Font("Segoe UI", 12), Location = new Point(30, 80), AutoSize = true };
-            txtUsername = new TextBox() { Font = new Font("Segoe UI", 16), Location = new Point(30, 110), Width = 340 };
+            txtUsername = new TextBox() { Font = new Font("Segoe UI", 16), Location = new Point(30, 110), Width = 390 };
 
-            Label l2 = new Label() { Text = "Пароль:", Font = new Font("Segoe UI", 12), Location = new Point(30, 160), AutoSize = true };
-            txtPassword = new TextBox() { Font = new Font("Segoe UI", 16), Location = new Point(30, 190), Width = 340, PasswordChar = '•' };
+            lblPasswordTitle = new Label() { Text = "Новий пароль (залиште пустим):", Font = new Font("Segoe UI", 12), Location = new Point(30, 160), AutoSize = true };
+            txtPassword = new TextBox() { Font = new Font("Segoe UI", 16), Location = new Point(30, 190), Width = 390, PasswordChar = '•' };
 
             Label l3 = new Label() { Text = "Посада / Права:", Font = new Font("Segoe UI", 12), Location = new Point(30, 240), AutoSize = true };
-            cmbRole = new ComboBox() { Font = new Font("Segoe UI", 16), Location = new Point(30, 270), Width = 340, DropDownStyle = ComboBoxStyle.DropDownList };
-            cmbRole.Items.AddRange(new string[] { "Admin", "Працівник", "Кухар" });
+            cmbRole = new ComboBox() { Font = new Font("Segoe UI", 16), Location = new Point(30, 270), Width = 390, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbRole.Items.AddRange(new string[] { "Admin", "Працивнік", "Кухар" });
 
-            Button btnSave = new Button() { Text = "ЗБЕРЕГТИ", Font = new Font("Segoe UI", 12, FontStyle.Bold), BackColor = Color.MediumSeaGreen, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Size = new Size(160, 50), Location = new Point(30, 350), Cursor = Cursors.Hand };
+            Button btnSave = new Button() { Text = "ЗБЕРЕГТИ", Font = new Font("Segoe UI", 12, FontStyle.Bold), BackColor = Color.MediumSeaGreen, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Size = new Size(185, 50), Location = new Point(30, 350), Cursor = Cursors.Hand };
             btnSave.FlatAppearance.BorderSize = 0;
             btnSave.Click += BtnSave_Click;
 
-            Button btnCancel = new Button() { Text = "СКАСУВАТИ", Font = new Font("Segoe UI", 12, FontStyle.Bold), BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Size = new Size(160, 50), Location = new Point(210, 350), Cursor = Cursors.Hand };
+            Button btnCancel = new Button() { Text = "СКАСУВАТИ", Font = new Font("Segoe UI", 12, FontStyle.Bold), BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Size = new Size(185, 50), Location = new Point(235, 350), Cursor = Cursors.Hand };
             btnCancel.FlatAppearance.BorderSize = 0;
             btnCancel.Click += (s, e) => { pnlPopup.Visible = false; dgvAccounts.Enabled = true; };
 
-            pnlPopup.Controls.AddRange(new Control[] { lblPopupTitle, l1, txtUsername, l2, txtPassword, l3, cmbRole, btnSave, btnCancel });
+            pnlPopup.Controls.AddRange(new Control[] { lblPopupTitle, l1, txtUsername, lblPasswordTitle, txtPassword, l3, cmbRole, btnSave, btnCancel });
             this.Controls.Add(pnlPopup);
         }
 
@@ -128,17 +134,23 @@ namespace Курсова
 
             if (type == "Edit")
             {
+                lblPasswordTitle.Text = "Новий пароль (залиште пустим):";
                 txtUsername.Text = user;
                 txtPassword.Text = "";
+
                 if (cmbRole.Items.Contains(role)) cmbRole.SelectedItem = role;
                 else cmbRole.SelectedIndex = 1;
             }
             else
             {
+                lblPasswordTitle.Text = "Пароль:";
                 txtUsername.Clear();
                 txtPassword.Clear();
                 cmbRole.SelectedIndex = 1;
             }
+
+            txtUsername.Enabled = true;
+            cmbRole.Enabled = true;
 
             pnlPopup.Location = new Point((this.Width - pnlPopup.Width) / 2, (this.Height - pnlPopup.Height) / 2);
             pnlPopup.Visible = true;
@@ -152,11 +164,20 @@ namespace Курсова
             using (MySqlConnection conn = DbHelper.GetConnection())
             {
                 if (conn == null || conn.State != ConnectionState.Open) return;
+
                 string query = "SELECT Id, Username AS Користувач, password_hash AS Пароль, Role AS Посада FROM Users";
                 using (MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn))
                 {
                     DataTable dt = new DataTable();
                     adapter.Fill(dt);
+
+                    dt.Columns.Add("№", typeof(int)).SetOrdinal(0);
+
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        dt.Rows[i]["№"] = i + 1;
+                    }
+
                     dgvAccounts.DataSource = dt;
                 }
             }
@@ -165,32 +186,62 @@ namespace Курсова
             AddActionButton("Delete", "🗑", Color.Crimson);
 
             dgvAccounts.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            if (dgvAccounts.Columns["Id"] != null) dgvAccounts.Columns["Id"].Width = 50;
+
+            if (dgvAccounts.Columns["№"] != null)
+            {
+                dgvAccounts.Columns["№"].Width = 50;
+                dgvAccounts.Columns["№"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            }
+
+            if (dgvAccounts.Columns["Id"] != null) dgvAccounts.Columns["Id"].Visible = false;
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtUsername.Text) || string.IsNullOrWhiteSpace(txtPassword.Text) || cmbRole.SelectedIndex == -1)
+            if (string.IsNullOrWhiteSpace(txtUsername.Text) || cmbRole.SelectedIndex == -1)
             {
-                MessageBox.Show("Будь ласка, заповніть усі поля!", "Помилка");
+                MessageBox.Show("Будь ласка, заповніть обов'язкові поля!", "Помилка");
                 return;
             }
 
-            string hashedPassword = SecurityHelper.HashPassword(txtPassword.Text.Trim());
+            if (actionType == "Add" && string.IsNullOrWhiteSpace(txtPassword.Text))
+            {
+                MessageBox.Show("Для нового користувача пароль обов'язковий!", "Помилка");
+                return;
+            }
 
             using (MySqlConnection conn = DbHelper.GetConnection())
             {
                 if (conn == null || conn.State != ConnectionState.Open) return;
-                string query = (actionType == "Add")
-                    ? "INSERT INTO Users (Username, password_hash, Role) VALUES (@user, @pass, @role)"
-                    : "UPDATE Users SET Username=@user, password_hash=@pass, Role=@role WHERE Id=@id";
 
-                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                string query = "";
+                using (MySqlCommand cmd = new MySqlCommand())
                 {
+                    cmd.Connection = conn;
                     cmd.Parameters.AddWithValue("@user", txtUsername.Text.Trim());
-                    cmd.Parameters.AddWithValue("@pass", hashedPassword);
                     cmd.Parameters.AddWithValue("@role", cmbRole.SelectedItem.ToString());
-                    if (actionType == "Edit") cmd.Parameters.AddWithValue("@id", selectedAccountId);
+
+                    if (actionType == "Add")
+                    {
+                        query = "INSERT INTO Users (Username, password_hash, Role) VALUES (@user, @pass, @role)";
+                        cmd.Parameters.AddWithValue("@pass", SecurityHelper.HashPassword(txtPassword.Text.Trim()));
+                    }
+                    else
+                    {
+                        cmd.Parameters.AddWithValue("@id", selectedAccountId);
+
+                        if (string.IsNullOrWhiteSpace(txtPassword.Text))
+                        {
+                            query = "UPDATE Users SET Username=@user, Role=@role WHERE Id=@id";
+                        }
+                        else
+                        {
+                            query = "UPDATE Users SET Username=@user, password_hash=@pass, Role=@role WHERE Id=@id";
+                            cmd.Parameters.AddWithValue("@pass", SecurityHelper.HashPassword(txtPassword.Text.Trim()));
+                        }
+                    }
+
+                    cmd.CommandText = query;
 
                     try
                     {
@@ -204,6 +255,7 @@ namespace Курсова
                     }
                 }
             }
+
             pnlPopup.Visible = false;
             dgvAccounts.Enabled = true;
             RefreshAccountList();
@@ -212,6 +264,7 @@ namespace Курсова
         private void DgvAccounts_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+
             int id = Convert.ToInt32(dgvAccounts.Rows[e.RowIndex].Cells["Id"].Value);
             string user = dgvAccounts.Rows[e.RowIndex].Cells["Користувач"].Value.ToString();
             string role = dgvAccounts.Rows[e.RowIndex].Cells["Посада"].Value.ToString();

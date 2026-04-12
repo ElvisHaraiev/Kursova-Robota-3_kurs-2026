@@ -24,6 +24,7 @@ namespace Курсова
         private ComboBox cmbTime;
         private Button btnReserve;
         private Button btnCancel;
+        private Button btnSaveChanges;
 
         private string _selectedTableName = "";
 
@@ -35,7 +36,6 @@ namespace Курсова
 
             CreateModernUI();
 
-            // Reflection to forcefully enable DoubleBuffering on FlowLayoutPanels to prevent flickering
             typeof(Panel).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 .SetValue(flpTables, true, null);
             typeof(Panel).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
@@ -105,7 +105,14 @@ namespace Курсова
             btnReserve.Click += BtnReserve_Click;
             pnlLeft.Controls.Add(btnReserve);
 
-            btnCancel = new Button() { Text = "Скасувати бронювання", Font = new Font("Segoe UI", 12, FontStyle.Bold), BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Size = new Size(300, 50), Location = new Point(20, 600), Visible = false };
+            btnSaveChanges = new Button() { Text = "Зберегти зміни", Font = new Font("Segoe UI", 12, FontStyle.Bold), BackColor = Color.SeaGreen, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Size = new Size(300, 45), Location = new Point(20, 530), Visible = false, Cursor = Cursors.Hand };
+            btnSaveChanges.FlatAppearance.BorderSize = 0;
+            btnSaveChanges.Click += BtnSaveChanges_Click;
+            RoundButtonCorners(btnSaveChanges, 15);
+            pnlLeft.Controls.Add(btnSaveChanges);
+
+            btnCancel = new Button() { Text = "Скасувати бронювання", Font = new Font("Segoe UI", 12, FontStyle.Bold), BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Size = new Size(300, 45), Location = new Point(20, 590), Visible = false, Cursor = Cursors.Hand };
+            btnCancel.FlatAppearance.BorderSize = 0;
             btnCancel.Click += BtnCancel_Click;
             RoundButtonCorners(btnCancel, 15);
             pnlLeft.Controls.Add(btnCancel);
@@ -230,6 +237,7 @@ namespace Курсова
                 cmbTime.SelectedItem = data.ResDate.ToString("HH:mm");
 
                 btnReserve.Visible = false;
+                btnSaveChanges.Visible = true;
                 btnCancel.Visible = true;
             }
             else
@@ -238,15 +246,13 @@ namespace Курсова
                 numGuestCount.Value = 2; dtpDate.Value = DateTime.Now; cmbTime.SelectedIndex = 0;
 
                 btnReserve.Visible = true;
+                btnSaveChanges.Visible = false;
                 btnCancel.Visible = false;
             }
 
             UpdateTableVisuals();
         }
 
-        // =======================================================
-        // 🚀 DATABASE & CRM ENGINE ENTEGRASYONU (GÜNCELLENDİ)
-        // =======================================================
         private void BtnReserve_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(_selectedTableName) || !mtbPhone.MaskCompleted || string.IsNullOrWhiteSpace(txtCustomerName.Text))
@@ -268,9 +274,6 @@ namespace Курсова
                 {
                     if (conn.State == ConnectionState.Closed) conn.Open();
 
-                    // =======================================================
-                    // 🚀 1. MÜŞTERİYİ CRM'DE (clients) ARA VE KAYDET/GÜNCELLE
-                    // =======================================================
                     string checkQuery = "SELECT id FROM clients WHERE phone = @phone";
                     using (MySqlCommand checkCmd = new MySqlCommand(checkQuery, conn))
                     {
@@ -283,7 +286,6 @@ namespace Курсова
 
                     if (isNewClient)
                     {
-                        // Yeni müşteriyse: Adresini boş ("-"), tipini "Резервація" olarak ekliyoruz
                         string insClientQuery = "INSERT INTO clients (phone, name, address, client_type, total_orders) VALUES (@phone, @name, '-', 'Резервація', 1)";
                         using (MySqlCommand insCmd = new MySqlCommand(insClientQuery, conn))
                         {
@@ -294,7 +296,6 @@ namespace Курсова
                     }
                     else
                     {
-                        // Eski müşteriyse: İsmimi veya Tipini güncelle, sipariş sayısını artır
                         string updClientQuery = "UPDATE clients SET total_orders = total_orders + 1, name = @name, client_type = 'Резервація' WHERE phone = @phone";
                         using (MySqlCommand updCmd = new MySqlCommand(updClientQuery, conn))
                         {
@@ -303,9 +304,7 @@ namespace Курсова
                             updCmd.ExecuteNonQuery();
                         }
                     }
-                    // =======================================================
 
-                    // 2. Rezervasyonu Reservations tablosuna kaydet (Orijinal kodun)
                     string query = "INSERT INTO Reservations (TableName, CustomerName, Phone, Email, GuestCount, ReservationDate) VALUES (@tn, @cn, @ph, @em, @gc, @rd)";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@tn", _selectedTableName);
@@ -317,12 +316,61 @@ namespace Курсова
                     cmd.ExecuteNonQuery();
                 }
 
-                // 3. Kullanıcıya bildirimi göster
                 string msg = isNewClient ? "Успішно заброньовано!\n🎉 Новий клієнт доданий до бази. (Доступна знижка 20% на замовлення)" : "Успішно заброньовано!";
                 frmModernMsgBox.Show(msg, "Успіх");
 
                 SyncWithDatabase();
                 UpdateTableVisuals();
+            }
+            catch (Exception ex) { frmModernMsgBox.Show("Error: " + ex.Message, "DB Error"); }
+        }
+
+        private void BtnSaveChanges_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(_selectedTableName) || !mtbPhone.MaskCompleted || string.IsNullOrWhiteSpace(txtCustomerName.Text))
+            {
+                frmModernMsgBox.Show("Заповніть коректно всі обов'язкові поля!", "Увага"); return;
+            }
+
+            DateTime selectedDate = dtpDate.Value.Date;
+            string[] timeParts = cmbTime.SelectedItem.ToString().Split(':');
+            selectedDate = selectedDate.AddHours(int.Parse(timeParts[0])).AddMinutes(int.Parse(timeParts[1]));
+
+            try
+            {
+                using (MySqlConnection conn = DbHelper.GetConnection())
+                {
+                    if (conn.State == ConnectionState.Closed) conn.Open();
+
+                    string query = @"UPDATE Reservations 
+                                     SET CustomerName = @cn, 
+                                         Phone = @ph, 
+                                         Email = @em, 
+                                         GuestCount = @gc, 
+                                         ReservationDate = @rd 
+                                     WHERE TableName = @tn AND Status = 'Active'";
+
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@cn", txtCustomerName.Text.Trim());
+                    cmd.Parameters.AddWithValue("@ph", mtbPhone.Text.Trim());
+                    cmd.Parameters.AddWithValue("@em", txtEmail.Text.Trim());
+                    cmd.Parameters.AddWithValue("@gc", (int)numGuestCount.Value);
+                    cmd.Parameters.AddWithValue("@rd", selectedDate);
+                    cmd.Parameters.AddWithValue("@tn", _selectedTableName);
+
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    if (rowsAffected > 0)
+                    {
+                        frmModernMsgBox.Show("Дані бронювання успішно оновлено!", "Успіх");
+                        SyncWithDatabase();
+                        UpdateTableVisuals();
+                    }
+                    else
+                    {
+                        frmModernMsgBox.Show("Не вдалося оновити дані. Можливо, бронювання скасовано.", "Помилка");
+                    }
+                }
             }
             catch (Exception ex) { frmModernMsgBox.Show("Error: " + ex.Message, "DB Error"); }
         }
@@ -345,7 +393,11 @@ namespace Курсова
                     _selectedTableName = "";
                     lblSelectedTable.Text = "Стіл: Не обрано";
                     txtCustomerName.Clear(); mtbPhone.Clear(); txtEmail.Clear();
-                    btnCancel.Visible = false; btnReserve.Visible = true;
+
+                    // Скидаємо кнопки
+                    btnCancel.Visible = false;
+                    btnSaveChanges.Visible = false;
+                    btnReserve.Visible = true;
 
                     SyncWithDatabase();
                     UpdateTableVisuals();

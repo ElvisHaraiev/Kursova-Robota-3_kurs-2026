@@ -89,7 +89,7 @@ namespace Курсова
                 CREATE TABLE IF NOT EXISTS `menuitems` (
                     `id` INT AUTO_INCREMENT PRIMARY KEY,
                     `name` VARCHAR(100) NOT NULL,
-                    `price` DECIMAL(18, 2), -- Змінено на DECIMAL
+                    `price` DECIMAL(18, 2),
                     `category` VARCHAR(100),
                     `is_available` TINYINT(1) DEFAULT 1,
                     `image_path` TEXT
@@ -100,7 +100,7 @@ namespace Курсова
                     `TableName` VARCHAR(100),
                     `WaiterName` VARCHAR(100),
                     `OrderDetails` TEXT,
-                    `TotalAmount` DECIMAL(18, 2), -- Змінено на DECIMAL
+                    `TotalAmount` DECIMAL(18, 2),
                     `PaymentMethod` VARCHAR(50),
                     `Status` VARCHAR(50),
                     `OrderDate` DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -111,8 +111,20 @@ namespace Курсова
                     `order_id` INT,
                     `item_name` VARCHAR(100),
                     `quantity` INT,
-                    `price` DECIMAL(18, 2), -- Змінено на DECIMAL
+                    `price` DECIMAL(18, 2),
                     FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE
+                ) ENGINE=InnoDB;
+
+                -- ОНОВЛЕНА ТАБЛИЦЯ БРОНЮВАНЬ (Ідеально підходить до інтерфейсу)
+                CREATE TABLE IF NOT EXISTS `Reservations` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `TableName` VARCHAR(100),
+                    `CustomerName` VARCHAR(100),
+                    `Phone` VARCHAR(20),
+                    `Email` VARCHAR(100),
+                    `GuestCount` INT,
+                    `ReservationDate` DATETIME,
+                    `Status` VARCHAR(50) DEFAULT 'Active'
                 ) ENGINE=InnoDB;
 
                 CREATE TABLE IF NOT EXISTS `users` (
@@ -127,10 +139,17 @@ namespace Курсова
 
                     try
                     {
+                        cmd.CommandText = "ALTER TABLE `Reservations` ADD COLUMN `Email` VARCHAR(100), ADD COLUMN `GuestCount` INT;";
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch { }
+
+                    try
+                    {
                         cmd.CommandText = "ALTER TABLE `users` CHANGE `password` `password_hash` VARCHAR(255);";
                         cmd.ExecuteNonQuery();
                     }
-                    catch {}
+                    catch { }
 
                     try
                     {
@@ -155,7 +174,5 @@ namespace Курсова
                 MessageBox.Show("Помилка ініціалізації БД: " + ex.Message);
             }
         }
-
     }
 }
-  
