@@ -13,7 +13,6 @@ namespace Курсова
     public partial class Form1 : Form
     {
         public static string LoggedInUser = "";
-
         public string RestaurantName { get; set; } = "MY RESTAURANT";
         public Image RestaurantLogo { get; set; } = null;
 
@@ -38,7 +37,7 @@ namespace Курсова
         public class SalesRecord { public string Table { get; set; } public string Waiter { get; set; } public string Products { get; set; } public string Total { get; set; } public string PaymentMethod { get; set; } public string FullReceiptText { get; set; } public DateTime Date { get; set; } }
         public static List<SalesRecord> SalesHistory = new List<SalesRecord>();
 
-        public class KitchenOrder { public string TableName { get; set; } public string WaiterName { get; set; } public string Time { get; set; } public string OrderDetails { get; set; } }
+        public class KitchenOrder { public string TableName { get; set; } public string WaiterName { get; set; } public string Time { get; set; } public string OrderDetails { get; set; } public bool IsReady { get; set; } = false; }
         public static List<KitchenOrder> PendingOrders = new List<KitchenOrder>();
 
         public class MenuItem { public string Name { get; set; } public double Price { get; set; } public string Category { get; set; } public string ImagePath { get; set; } }
@@ -66,6 +65,16 @@ namespace Курсова
             CreateBurgerMenu();
 
             ShowPage(new ucLogin());
+        }
+
+        public void ShowOrderReadyNotification(string message)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => ShowOrderReadyNotification(message)));
+                return;
+            }
+            frmModernMsgBox.Show(message, "Сповіщення з кухні");
         }
 
         private void InitializeHeader()

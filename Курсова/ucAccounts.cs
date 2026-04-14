@@ -75,7 +75,6 @@ namespace Курсова
             dgvAccounts.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             dgvAccounts.RowHeadersVisible = false;
 
-            // 🚀 ЗАБЛОКОВАНО РУЧНЕ РЕДАГУВАННЯ ТАБЛИЦІ
             dgvAccounts.ReadOnly = true;
             dgvAccounts.AllowUserToAddRows = false;
             dgvAccounts.AllowUserToDeleteRows = false;
@@ -165,7 +164,8 @@ namespace Курсова
             {
                 if (conn == null || conn.State != ConnectionState.Open) return;
 
-                string query = "SELECT Id, Username AS Користувач, password_hash AS Пароль, Role AS Посада FROM Users";
+                // ДОДАНО: ORDER BY Id ASC, щоб черга завжди йшла від початку
+                string query = "SELECT Id, Username AS Користувач, password_hash AS Пароль, Role AS Посада FROM Users ORDER BY Id ASC";
                 using (MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn))
                 {
                     DataTable dt = new DataTable();

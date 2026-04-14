@@ -10,8 +10,6 @@ namespace Курсова
 {
     public partial class ucKitchen : UserControl
     {
-        private static Dictionary<string, DateTime> OrderTimers = new Dictionary<string, DateTime>();
-
         public ucKitchen()
         {
             InitializeComponent();
@@ -29,13 +27,14 @@ namespace Курсова
 
             foreach (var order in Form1.PendingOrders)
             {
-                bool isDelivery = order.TableName.ToUpper().Contains("ДОСТАВКА") || order.TableName.ToUpper().Contains("PAKET");
+                bool isDelivery = order.TableName.ToUpper().Contains("ДОСТАВКА") || order.TableName.ToUpper().Contains("PAKET") || order.TableName.Contains("📦");
                 string cleanName = isDelivery ? order.TableName.Replace("📦", "").Replace("Доставка", "").Replace("Paket", "").Replace("SERVİS", "").Trim() : order.TableName;
 
                 string productsToShow = order.OrderDetails;
                 int addressIndex = productsToShow.IndexOf("--- ДАНІ ДОСТАВКИ");
 
                 if (addressIndex == -1) addressIndex = productsToShow.IndexOf("--- ДОСТАВКА");
+                if (addressIndex == -1) addressIndex = productsToShow.IndexOf("ЗНИЖКА");
 
                 if (addressIndex != -1)
                 {
@@ -58,7 +57,7 @@ namespace Курсова
                     BackColor = isDelivery ? Color.FromArgb(255, 140, 0) : Color.FromArgb(43, 52, 75)
                 };
 
-                string headerText = isDelivery ? "Номер замовлення : " + cleanName : "Стіл : " + cleanName;
+                string headerText = isDelivery ? cleanName : "Стіл : " + cleanName;
                 Label lblTable = new Label { Text = headerText, ForeColor = Color.White, Location = new Point(10, 10), Font = new Font("Segoe UI", 11, FontStyle.Bold), AutoSize = true };
                 Label lblWaiter = new Label { Text = "Офіціант : " + order.WaiterName, ForeColor = Color.LightGray, Location = new Point(10, 40), Font = new Font("Segoe UI", 10), AutoSize = true };
                 Label lblTime = new Label { Text = "Час замовлення : " + order.Time, ForeColor = Color.LightGray, Location = new Point(10, 65), Font = new Font("Segoe UI", 10), AutoSize = true };
@@ -91,51 +90,42 @@ namespace Курсова
                 };
                 btnPrint.FlatAppearance.BorderSize = 0;
 
+                string readyText = isDelivery ? $"ДРУК (ГОТОВО Доставка {cleanName})" : $"ДРУК (ГОТОВО {cleanName})";
+                string pendingText = "ДРУК (ОЧІКУЄТЬСЯ)";
 
-                string uniqueOrderKey = order.TableName + "|" + order.Time + "|" + productsToShow.Length;
-
-                if (!OrderTimers.ContainsKey(uniqueOrderKey))
-                {
-                    OrderTimers[uniqueOrderKey] = DateTime.Now;
-                }
-
-
-                TimeSpan elapsed = DateTime.Now - OrderTimers[uniqueOrderKey];
-
-                if (elapsed.TotalSeconds >= 10)
+                // ТЕПЕР КУХНЯ ПРОСТО ДИВИТЬСЯ НА СТАТУС, ЯКИЙ ПОСТАВИЛА FORM1
+                if (order.IsReady)
                 {
                     btnPrint.BackColor = Color.MediumSeaGreen;
-                    btnPrint.Text = "Друк (ГОТОВО)";
+                    btnPrint.Text = readyText;
                 }
                 else
                 {
                     btnPrint.BackColor = Color.FromArgb(255, 105, 135);
-                    btnPrint.Text = "Друк";
+                    btnPrint.Text = pendingText;
 
-                    int remainingWaitTime = 10000 - (int)elapsed.TotalMilliseconds;
-                    if (remainingWaitTime > 0)
+                    // Запускаємо локальний таймер чисто для оновлення кольору на самій сторінці (якщо кухар сидить і чекає)
+                    _ = Task.Run(async () =>
                     {
-                        _ = Task.Run(async () =>
+                        while (!order.IsReady)
                         {
-                            await Task.Delay(remainingWaitTime);
+                            await Task.Delay(500); // Перевіряємо кожні півсекунди
+                        }
 
-
-                            try
+                        try
+                        {
+                            if (!btnPrint.IsDisposed)
                             {
-                                if (!btnPrint.IsDisposed)
+                                btnPrint.Invoke((MethodInvoker)delegate
                                 {
-                                    btnPrint.Invoke((MethodInvoker)delegate
-                                    {
-                                        btnPrint.BackColor = Color.MediumSeaGreen;
-                                        btnPrint.Text = "Друк (ГОТОВО)";
-                                    });
-                                }
+                                    btnPrint.BackColor = Color.MediumSeaGreen;
+                                    btnPrint.Text = readyText;
+                                });
                             }
-                            catch {}
-                        });
-                    }
+                        }
+                        catch { }
+                    });
                 }
-
 
                 btnPrint.Click += (s, ev) =>
                 {
@@ -151,7 +141,7 @@ namespace Курсова
                         int y = 70;
                         int xMargin = 100;
 
-                        gr.DrawString("КУХОННИЙ ЧЕК", titleFont, Brushes.Black, 220, y); // 🇺🇦
+                        gr.DrawString("КУХОННИЙ ЧЕК", titleFont, Brushes.Black, 220, y);
                         y += 70;
 
                         if (isDelivery)
@@ -177,7 +167,7 @@ namespace Курсова
                         gr.DrawLine(new Pen(Color.Black, 2), xMargin, y, 750, y);
                         y += 20;
 
-                        gr.DrawString("К-СТЬ ТА НАЗВА ТОВАРУ", subTitleFont, Brushes.Black, xMargin, y); // 🇺🇦
+                        gr.DrawString("К-СТЬ ТА НАЗВА ТОВАРУ", subTitleFont, Brushes.Black, xMargin, y);
                         y += 35;
 
                         string[] itemLines = productsToShow.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -193,7 +183,7 @@ namespace Курсова
                         y += 20;
                         gr.DrawLine(new Pen(Color.Black, 2), xMargin, y, 750, y);
                         y += 30;
-                        gr.DrawString("КОПІЯ ДЛЯ КУХНІ", regFont, Brushes.Black, 350, y); // 🇺🇦
+                        gr.DrawString("КОПІЯ ДЛЯ КУХНІ", regFont, Brushes.Black, 350, y);
                     };
 
                     PrintPreviewDialog ppDialog = new PrintPreviewDialog();

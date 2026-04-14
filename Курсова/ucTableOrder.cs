@@ -19,7 +19,7 @@ namespace Курсова
         private Padding defaultPadding;
 
         public bool IsDelivery { get; set; } = false;
-
+        
         public ucTableOrder()
         {
             InitializeComponent();
@@ -438,20 +438,26 @@ namespace Курсова
                     TableName = tableName,
                     WaiterName = Form1.LoggedInUser,
                     OrderDetails = orderDetails,
-                    Time = DateTime.Now.ToString("HH:mm")
+                    Time = DateTime.Now.ToString("HH:mm"),
+                    IsReady = false
                 });
 
                 orderConfirmed = true;
                 frmModernMsgBox.Show("Замовлення успішно відправлено на кухню!", "Підтверджено");
 
+                Form1 mainFormInstance = (Form1)this.FindForm();
+
                 _ = Task.Run(async () =>
                 {
-                    await Task.Delay(10000);
+                    await Task.Delay(5000);
 
-                    this.Invoke((MethodInvoker)delegate
+                    var order = Form1.PendingOrders.FirstOrDefault(o => o.TableName == tableName);
+                    if (order != null) order.IsReady = true;
+
+                    if (mainFormInstance != null && !mainFormInstance.IsDisposed)
                     {
-                        frmModernMsgBox.Show($"🔔 Увага! Замовлення для столу '{tableName}' ГОТОВЕ! Можна забирати з кухні.", "Сповіщення з кухні");
-                    });
+                        mainFormInstance.ShowOrderReadyNotification($"🔔 Увага! Замовлення для столу '{tableName}' ГОТОВЕ!\nМожна забирати з кухні.");
+                    }
                 });
             }
         }
@@ -580,6 +586,54 @@ namespace Курсова
         {
             string tableName = SelectedTableButton != null ? SelectedTableButton.Text.Split('\n')[0] : "Замовлення";
 
+            double discountPercent = 0;
+            double discountAmount = 0;
+            string clientName = "Гість";
+            string discountReason = "";
+
+            try
+            {
+                using (MySqlConnection conn = DbHelper.GetConnection())
+                {
+                    if (conn.State == ConnectionState.Closed) conn.Open();
+
+                    string discQuery = @"
+                        SELECT c.name, c.total_orders 
+                        FROM Reservations r 
+                        JOIN Clients c ON r.phone = c.phone 
+                        WHERE r.TableName = @tn AND r.Status = 'Active'
+                        LIMIT 1";
+
+                    using (MySqlCommand cmd = new MySqlCommand(discQuery, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@tn", tableName);
+                        using (MySqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                clientName = reader["name"].ToString();
+                                if (reader["total_orders"] != DBNull.Value)
+                                {
+                                    int totalOrders = Convert.ToInt32(reader["total_orders"]);
+                                    if (totalOrders <= 1)
+                                    {
+                                        discountPercent = 20.0;
+                                        discountReason = "(новий клієнт)";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            
+            if (discountPercent > 0)
+            {
+                discountAmount = totalAmount * (discountPercent / 100.0);
+            }
+            double finalAmount = totalAmount - discountAmount;
+
             StringBuilder receipt = new StringBuilder();
             receipt.AppendLine("      ====================================");
             receipt.AppendLine("                MY RESTAURANT             ");
@@ -598,7 +652,16 @@ namespace Курсова
             }
 
             receipt.AppendLine(" ------------------------------------------");
-            receipt.AppendLine($" РАЗОМ   : {totalAmount:N2} ₴");
+            receipt.AppendLine($" СУМА    : {totalAmount:N2} ₴");
+
+            if (discountPercent > 0)
+            {
+                receipt.AppendLine($" КЛІЄНТ  : {clientName}");
+                receipt.AppendLine($" ЗНИЖКА  : {discountPercent}% {discountReason}");
+                receipt.AppendLine($" ВІДНЯТО : -{discountAmount:N2} ₴");
+            }
+
+            receipt.AppendLine($" РАЗОМ   : {finalAmount:N2} ₴");
             receipt.AppendLine($" ОПЛАТА  : {paymentType}");
             receipt.AppendLine(" ==========================================");
 
@@ -608,10 +671,11 @@ namespace Курсова
                 {
                     if (conn.State == ConnectionState.Closed) conn.Open();
 
-                    string updateQuery = "UPDATE Orders SET Status = 'Paid', PaymentMethod = @method WHERE TableName = @tn AND Status = 'Pending'";
+                    string updateQuery = "UPDATE Orders SET Status = 'Paid', PaymentMethod = @method, TotalAmount = @final WHERE TableName = @tn AND Status = 'Pending'";
                     using (MySqlCommand cmd = new MySqlCommand(updateQuery, conn))
                     {
                         cmd.Parameters.AddWithValue("@method", paymentType);
+                        cmd.Parameters.AddWithValue("@final", finalAmount);
                         cmd.Parameters.AddWithValue("@tn", tableName);
                         cmd.ExecuteNonQuery();
                     }
@@ -635,7 +699,7 @@ namespace Курсова
                 Table = tableName,
                 Waiter = Form1.LoggedInUser,
                 Products = string.Join("\n", lstCart.Items.Cast<object>()),
-                Total = totalAmount.ToString("N2") + " ₴",
+                Total = finalAmount.ToString("N2") + " ₴",
                 PaymentMethod = paymentType,
                 FullReceiptText = receipt.ToString(),
                 Date = DateTime.Now

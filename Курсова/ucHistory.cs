@@ -132,7 +132,7 @@ namespace Курсова
 
             if (isDelivery)
             {
-                g.DrawString("📦 MY RESTARUANT ДОСТАВКА", fontHeader, Brushes.Black, 220, currentY);
+                g.DrawString("📦 MY RESTAURANT ДОСТАВКА", fontHeader, Brushes.Black, 220, currentY);
                 currentY += 50;
                 g.DrawString("Чек на доставку", fontSubHeader, Brushes.Black, 330, currentY);
             }
@@ -199,10 +199,7 @@ namespace Курсова
                         g.DrawString(lineTotal.ToString("N2") + " ₴", fontBody, Brushes.Black, 665, currentY);
                     }
                 }
-                catch
-                {
-
-                }
+                catch { }
                 currentY += 25;
 
                 if (currentY > 1000) break;
@@ -226,7 +223,20 @@ namespace Курсова
                 g.DrawString(rawTotalSum.ToString("N2") + " ₴", fontSubHeader, Brushes.DimGray, 660, currentY);
                 currentY += 25;
 
-                g.DrawString("ЗНИЖКА (WELCOME2026) :", new Font("Times New Roman", 10, FontStyle.Italic | FontStyle.Bold), Brushes.Crimson, 460, currentY);
+                string discountLabel = "ЗНИЖКА :";
+                string searchData = (selectedRecord.FullReceiptText ?? "") + " " + (selectedRecord.Products ?? "");
+                string upperSearch = searchData.ToUpper();
+
+                if (upperSearch.Contains("НОВИЙ КЛІЄНТ") || upperSearch.Contains("НОВИЙ"))
+                {
+                    discountLabel = "ЗНИЖКА (новий клієнт) :";
+                }
+                else if (upperSearch.Contains("WELCOME2026") || upperSearch.Contains("WELCOME"))
+                {
+                    discountLabel = "ЗНИЖКА (WELCOME2026) :";
+                }
+
+                g.DrawString(discountLabel, new Font("Times New Roman", 10, FontStyle.Italic | FontStyle.Bold), Brushes.Crimson, 430, currentY);
                 g.DrawString("-" + discountAmount.ToString("N2") + " ₴", new Font("Times New Roman", 10, FontStyle.Bold), Brushes.Crimson, 660, currentY);
                 currentY += 30;
 

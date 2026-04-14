@@ -7,7 +7,6 @@ using Курсова;
 
 namespace Курсова
 {
-
     public interface ICustomerRepository
     {
         DataTable GetAllCustomers();
@@ -24,7 +23,7 @@ namespace Курсова
             {
                 if (conn.State == ConnectionState.Closed) conn.Open();
 
-                string query = "SELECT id, phone, name, address, client_type, total_orders FROM clients ORDER BY id DESC";
+                string query = "SELECT id, phone, name, address, client_type, total_orders FROM clients ORDER BY id ASC";
 
                 using (MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn))
                 {
@@ -98,40 +97,33 @@ namespace Курсова
 
         private void CreateUI()
         {
-
             pnlEdit = new Panel() { Width = 350, Dock = DockStyle.Right, BackColor = Color.White };
             this.Controls.Add(pnlEdit);
 
             Label lblEditTitle = new Label() { Text = "Редагувати Клієнта", Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.DarkSlateBlue, AutoSize = true, Location = new Point(20, 20) };
             pnlEdit.Controls.Add(lblEditTitle);
 
-
             Label lblType = new Label() { Text = "Тип Клієнта:", Font = new Font("Segoe UI", 10, FontStyle.Bold), Location = new Point(20, 80), AutoSize = true };
             cmbType = new ComboBox() { Font = new Font("Segoe UI", 12), Location = new Point(20, 105), Width = 300, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbType.Items.AddRange(new string[] { "Доставка", "Резервація" });
-            cmbType.SelectedIndexChanged += (s, e) => { txtAddress.Enabled = (cmbType.Text == "Доставка"); }; 
+            cmbType.SelectedIndexChanged += (s, e) => { txtAddress.Enabled = (cmbType.Text == "Доставка"); };
             pnlEdit.Controls.Add(lblType); pnlEdit.Controls.Add(cmbType);
-
 
             Label lblPhone = new Label() { Text = "Телефон:", Font = new Font("Segoe UI", 10, FontStyle.Bold), Location = new Point(20, 150), AutoSize = true };
             txtPhone = new TextBox() { Font = new Font("Segoe UI", 12), Location = new Point(20, 175), Width = 300 };
             pnlEdit.Controls.Add(lblPhone); pnlEdit.Controls.Add(txtPhone);
 
-
             Label lblName = new Label() { Text = "Ім'я клієнта:", Font = new Font("Segoe UI", 10, FontStyle.Bold), Location = new Point(20, 220), AutoSize = true };
             txtName = new TextBox() { Font = new Font("Segoe UI", 12), Location = new Point(20, 245), Width = 300 };
             pnlEdit.Controls.Add(lblName); pnlEdit.Controls.Add(txtName);
-
 
             Label lblAddress = new Label() { Text = "Адреса (Тільки для доставки):", Font = new Font("Segoe UI", 10, FontStyle.Bold), Location = new Point(20, 290), AutoSize = true };
             txtAddress = new TextBox() { Font = new Font("Segoe UI", 12), Location = new Point(20, 315), Width = 300, Height = 60, Multiline = true };
             pnlEdit.Controls.Add(lblAddress); pnlEdit.Controls.Add(txtAddress);
 
-
             lblDiscountStatus = new Label() { Text = "Статус знижки: Очікування...", Font = new Font("Segoe UI", 10, FontStyle.Italic), ForeColor = Color.DeepPink, Location = new Point(20, 390), AutoSize = true };
             pnlEdit.Controls.Add(lblDiscountStatus);
 
-  
             Button btnUpdate = new Button() { Text = "💾 Зберегти Зміни", Font = new Font("Segoe UI", 12, FontStyle.Bold), BackColor = Color.MediumSeaGreen, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(20, 440), Width = 300, Height = 45, Cursor = Cursors.Hand };
             btnUpdate.FlatAppearance.BorderSize = 0;
             btnUpdate.Click += BtnUpdate_Click;
@@ -141,7 +133,6 @@ namespace Курсова
             btnDelete.FlatAppearance.BorderSize = 0;
             btnDelete.Click += BtnDelete_Click;
             pnlEdit.Controls.Add(btnDelete);
-
 
             Label lblHeader = new Label() { Text = "👥 Управління Клієнтами (CRM)", Font = new Font("Segoe UI", 24, FontStyle.Bold), ForeColor = Color.DarkSlateBlue, AutoSize = true, Location = new Point(20, 20) };
             this.Controls.Add(lblHeader);
@@ -178,10 +169,26 @@ namespace Курсова
             try
             {
                 DataTable data = _customerRepo.GetAllCustomers();
+
+                if (!data.Columns.Contains("№"))
+                {
+                    data.Columns.Add("№", typeof(int)).SetOrdinal(0);
+                }
+
+                for (int i = 0; i < data.Rows.Count; i++)
+                {
+                    data.Rows[i]["№"] = i + 1;
+                }
+
                 dgvCustomers.DataSource = data;
 
-                dgvCustomers.Columns["id"].HeaderText = "ID";
-                dgvCustomers.Columns["id"].Width = 50;
+                if (dgvCustomers.Columns["id"] != null)
+                {
+                    dgvCustomers.Columns["id"].Visible = false;
+                }
+
+                dgvCustomers.Columns["№"].HeaderText = "№";
+                dgvCustomers.Columns["№"].Width = 50;
                 dgvCustomers.Columns["phone"].HeaderText = "Телефон";
                 dgvCustomers.Columns["name"].HeaderText = "Ім'я";
                 dgvCustomers.Columns["address"].HeaderText = "Адреса";

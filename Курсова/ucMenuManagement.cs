@@ -327,7 +327,7 @@ namespace Курсова
 
             return alertForm.ShowDialog();
         }
-
+        
         private void dgvMenu_CellContentClick(object sender, DataGridViewCellEventArgs e) { }
         private void printDocument1_PrintPage(object sender, System.Drawing.Printing.PrintPageEventArgs e) { }
         private void cmbModern_SelectedIndexChanged(object sender, EventArgs e) { }

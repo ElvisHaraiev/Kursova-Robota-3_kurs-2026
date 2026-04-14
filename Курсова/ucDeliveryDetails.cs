@@ -30,6 +30,7 @@ namespace Курсова
         private decimal currentTotal = 0m;
         private decimal discountAmount = 0m;
         private bool isDiscountApplied = false;
+        private string appliedPromoOrReason = "";
 
         public ucDeliveryDetails()
         {
@@ -122,8 +123,8 @@ namespace Курсова
                 if (!isDiscountApplied)
                 {
                     discountStrategy = new PercentageDiscountStrategy(0.20m);
-
                     isDiscountApplied = true;
+                    appliedPromoOrReason = "WELCOME2026";
                     discountAmount = discountStrategy.CalculateDiscountAmount(originalTotal);
                     currentTotal = originalTotal - discountAmount;
 
@@ -148,7 +149,7 @@ namespace Курсова
             if (lblOrderSummary != null)
             {
                 string discountText = isDiscountApplied
-                    ? $"\nЗНИЖКА: -{discountAmount:N2} ₴\n-------------------\nДО СПЛАТИ: {currentTotal:N2} ₴"
+                    ? $"\nЗНИЖКА ({appliedPromoOrReason}): -{discountAmount:N2} ₴\n-------------------\nДО СПЛАТИ: {currentTotal:N2} ₴"
                     : $"\n-------------------\nРАЗОМ: {currentTotal:N2} ₴";
 
                 lblOrderSummary.Text = "--- ДЕТАЛІ ЗАМОВЛЕННЯ ---\n\n" + CartContent + "\n" + discountText;
@@ -224,13 +225,12 @@ namespace Курсова
 
                         if (!isDiscountApplied)
                         {
-                            // Оновлена логіка стратегії
                             discountStrategy = new PercentageDiscountStrategy(0.20m);
                             decimal newDiscount = discountStrategy.CalculateDiscountAmount(originalTotal);
                             discountAmount += newDiscount;
                             currentTotal = originalTotal - discountAmount;
                             isDiscountApplied = true;
-
+                            appliedPromoOrReason = "новий клієнт";
                             extraDiscountMsg = "\n🎉 Знижка 20% (Новий клієнт) успішно застосована!";
                         }
                     }
@@ -250,7 +250,7 @@ namespace Курсова
                     int orderID = rnd.Next(1000, 10000);
                     deliveryName = "Доставка #" + orderID;
 
-                    receiptDiscountText = isDiscountApplied ? $"\nЗНИЖКА: -{discountAmount:N2} ₴\nДО СПЛАТИ: {currentTotal:N2} ₴" : $"\nРАЗОМ: {currentTotal:N2} ₴";
+                    receiptDiscountText = isDiscountApplied ? $"\nЗНИЖКА ({appliedPromoOrReason}): -{discountAmount:N2} ₴\nДО СПЛАТИ: {currentTotal:N2} ₴" : $"\nРАЗОМ: {currentTotal:N2} ₴";
                     combinedDetails = $"Клієнт: {txtFullName.Text}\nТелефон: {mtbPhone.Text}\nАДРЕСА: {fullAddress}\n\n{CartContent}\n{receiptDiscountText}";
 
                     string query = "INSERT INTO Orders (TableName, WaiterName, OrderDetails, TotalAmount, PaymentMethod, Status) " +
@@ -321,17 +321,17 @@ namespace Курсова
                     Form1.SalesHistory.Add(newSalesRecord);
                 }
 
-                string safeDeliveryName = deliveryName;
+                string safeDeliveryName = "📦 " + deliveryName;
                 _ = Task.Run(async () =>
                 {
-                    await Task.Delay(10000);
+                    await Task.Delay(5000);
+
+                    var order = Form1.PendingOrders.FirstOrDefault(o => o.TableName == safeDeliveryName);
+                    if (order != null) order.IsReady = true;
 
                     if (mainForm != null && !mainForm.IsDisposed)
                     {
-                        mainForm.Invoke((MethodInvoker)delegate
-                        {
-                            MessageBox.Show($"🔔 Увага! Замовлення '{safeDeliveryName}' ГОТОВЕ!\nКур'єр може забирати з кухні.", "Сповіщення з кухні", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        });
+                        mainForm.ShowOrderReadyNotification($"🔔 Увага! Замовлення '{deliveryName}' ГОТОВЕ!\nКур'єр може забирати з кухні.");
                     }
                 });
 
